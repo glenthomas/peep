@@ -17,11 +17,22 @@ declare global {
   }
 }
 
+interface HistoricalData {
+  timestamp: number;
+  cpu: number;
+  memory: number;
+  diskRead: number;
+  diskWrite: number;
+  networkRx: number;
+  networkTx: number;
+}
+
 const App: React.FC = () => {
   const [systemInfo, setSystemInfo] = useState<any>(null);
   const [processes, setProcesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoricalData[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +45,23 @@ const App: React.FC = () => {
         setSystemInfo(info);
         setProcesses(procs);
         setLoading(false);
+
+        // Add to history (keep last 30 minutes at 2-second intervals = 900 data points)
+        const newDataPoint: HistoricalData = {
+          timestamp: Date.now(),
+          cpu: info?.cpu?.usage ?? 0,
+          memory: info?.memory ? (info.memory.used / info.memory.total) * 100 : 0,
+          diskRead: info?.disk?.read ?? 0,
+          diskWrite: info?.disk?.write ?? 0,
+          networkRx: info?.network?.rx ?? 0,
+          networkTx: info?.network?.tx ?? 0,
+        };
+
+        setHistory((prev) => {
+          const updated = [...prev, newDataPoint];
+          // Keep only last 900 data points (30 minutes)
+          return updated.slice(-900);
+        });
       } catch (err) {
         setError("Failed to fetch system information");
         setLoading(false);
@@ -77,10 +105,10 @@ const App: React.FC = () => {
       </header>
       <main className="main-content">
         <div className="dashboard">
-          <CPUMonitor data={systemInfo?.cpu} />
-          <MemoryMonitor data={systemInfo?.memory} />
-          <DiskMonitor data={systemInfo?.disk} />
-          <NetworkMonitor data={systemInfo?.network} />
+          <CPUMonitor data={systemInfo?.cpu} history={history} />
+          <MemoryMonitor data={systemInfo?.memory} history={history} />
+          <DiskMonitor data={systemInfo?.disk} history={history} />
+          <NetworkMonitor data={systemInfo?.network} history={history} />
         </div>
         <ProcessList
           processes={processes}
