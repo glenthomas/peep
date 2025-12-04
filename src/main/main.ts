@@ -4,7 +4,10 @@ import * as path from 'path';
 // Import the native module
 let native: any;
 try {
-  native = require('../../native/index.node');
+  // Use path.join with __dirname to get the correct absolute path
+  // From dist/main.js, go up one level to project root, then to native/index.node
+  const nativePath = path.join(__dirname, '..', 'native', 'index.node');
+  native = require(nativePath);
 } catch (error) {
   console.error('Failed to load native module:', error);
   native = null;

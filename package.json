@@ -4,7 +4,7 @@
   "description": "System monitor - A visually impressive system monitor for macOS",
   "main": "dist/main.js",
   "scripts": {
-    "build:native": "cd native && cargo build --release && cd .. && cargo-cp-artifact -ac peep-native ./native/index.node -- cargo build --message-format=json-render-diagnostics --release --manifest-path=native/Cargo.toml",
+    "build:native": "cd native && cargo build --release && cd .. && npx cargo-cp-artifact -ac peep-native ./native/index.node -- cargo build --message-format=json-render-diagnostics --release --manifest-path=native/Cargo.toml",
     "build:main": "tsc src/main/main.ts --outDir dist --target ES2020 --module commonjs --esModuleInterop --skipLibCheck",
     "build:preload": "tsc src/main/preload.ts --outDir dist --target ES2020 --module commonjs --esModuleInterop --skipLibCheck",
     "build:renderer": "webpack --mode production",
@@ -32,6 +32,8 @@
   },
   "devDependencies": {
     "@neon-rs/cli": "^0.1.82",
+    "@types/electron": "^1.4.38",
+    "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "cargo-cp-artifact": "^0.1.9",

@@ -211,9 +211,22 @@ npm run build:native
 2. Rebuild everything: `npm run build`
 3. Check that the native module built successfully: `ls native/index.node`
 
+**Common Error**: `Cannot find module '../../native/index.node'`
+- **Cause**: The native module hasn't been built yet
+- **Solution**: Run `npm run build:native` before `npm start`
+- **Explanation**: The Rust native module must be compiled to `native/index.node` before Electron can load it
+
 ### Process Killing Not Working
 
 On macOS, you may need to grant additional permissions to the application. Some system processes cannot be killed by user applications.
+
+### Module Loading Issues
+
+If you see errors about loading the native module:
+1. Verify the native module exists: `ls -lh native/index.node`
+2. Check file permissions: `chmod +x native/index.node`
+3. Ensure you're running from the project root directory
+4. Try a clean rebuild: `npm run build`
 
 ## Contributing
 
