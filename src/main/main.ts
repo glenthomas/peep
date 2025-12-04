@@ -27,11 +27,11 @@ function createWindow() {
     title: 'Peep - System Monitor',
   });
 
+  // Load the index.html file
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
   }
 
   mainWindow.on('closed', () => {
