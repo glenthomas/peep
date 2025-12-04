@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import CPUMonitor from './components/CPUMonitor';
-import MemoryMonitor from './components/MemoryMonitor';
-import DiskMonitor from './components/DiskMonitor';
-import NetworkMonitor from './components/NetworkMonitor';
-import ProcessList from './components/ProcessList';
+import React, { useState, useEffect } from "react";
+import CPUMonitor from "./components/CPUMonitor";
+import MemoryMonitor from "./components/MemoryMonitor";
+import DiskMonitor from "./components/DiskMonitor";
+import NetworkMonitor from "./components/NetworkMonitor";
+import ProcessList from "./components/ProcessList";
 
 declare global {
   interface Window {
     electronAPI: {
       getSystemInfo: () => Promise<any>;
       getProcesses: () => Promise<any[]>;
-      killProcess: (pid: number) => Promise<{ success: boolean; message: string }>;
+      killProcess: (
+        pid: number
+      ) => Promise<{ success: boolean; message: string }>;
     };
   }
 }
@@ -28,12 +30,12 @@ const App: React.FC = () => {
           window.electronAPI.getSystemInfo(),
           window.electronAPI.getProcesses(),
         ]);
-        
+
         setSystemInfo(info);
         setProcesses(procs);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch system information');
+        setError("Failed to fetch system information");
         setLoading(false);
       }
     };
@@ -55,8 +57,24 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <header className="header">
-        <h1>⚡ Peep</h1>
-        <p>System Monitor - Real-time performance insights</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+              fill="currentColor"
+            />
+          </svg>
+          <div>
+            <h1>Peep</h1>
+          </div>
+          </div>
+          <p>System Monitor - Real-time performance insights</p>
       </header>
       <main className="main-content">
         <div className="dashboard">
@@ -65,12 +83,12 @@ const App: React.FC = () => {
           <DiskMonitor data={systemInfo?.disk} />
           <NetworkMonitor data={systemInfo?.network} />
         </div>
-        <ProcessList 
-          processes={processes} 
+        <ProcessList
+          processes={processes}
           onKillProcess={async (pid) => {
             const result = await window.electronAPI.killProcess(pid);
             if (result.success) {
-              setProcesses(processes.filter(p => p.pid !== pid));
+              setProcesses(processes.filter((p) => p.pid !== pid));
             }
             return result;
           }}
