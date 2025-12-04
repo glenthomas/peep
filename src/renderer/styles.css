@@ -35,18 +35,21 @@ body {
   color: white;
   padding: 20px 30px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  -webkit-app-region: drag;
 }
 
 .header h1 {
   font-size: 28px;
   font-weight: 600;
   margin: 0;
+  -webkit-user-select: none;
 }
 
 .header p {
   margin: 5px 0 0;
   opacity: 0.9;
   font-size: 14px;
+  -webkit-user-select: none;
 }
 
 .main-content {
