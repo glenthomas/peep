@@ -71,10 +71,9 @@ const App: React.FC = () => {
             />
           </svg>
           <div>
-            <h1>Peep</h1>
+            <h2>Peep</h2>
           </div>
           </div>
-          <p>System Monitor - Real-time performance insights</p>
       </header>
       <main className="main-content">
         <div className="dashboard">
