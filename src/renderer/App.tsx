@@ -32,7 +32,17 @@ const App: React.FC = () => {
   const [processes, setProcesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoricalData[]>([]);
+  const [history, setHistory] = useState<HistoricalData[]>(() =>
+    Array.from({ length: 900 }, (_, i) => ({
+      timestamp: Date.now() - (900 - i) * 2000,
+      cpu: 0,
+      memory: 0,
+      diskRead: 0,
+      diskWrite: 0,
+      networkRx: 0,
+      networkTx: 0,
+    }))
+  );
 
   useEffect(() => {
     const fetchData = async () => {
