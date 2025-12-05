@@ -1,11 +1,12 @@
 use neon::prelude::*;
-use sysinfo::{System, Pid, Signal, ProcessesToUpdate, Networks};
+use sysinfo::{System, Pid, Signal, ProcessesToUpdate, Networks, Users};
 use std::sync::{Arc, Mutex};
 
 // Global system instance to maintain state between calls
 lazy_static::lazy_static! {
     static ref SYSTEM: Arc<Mutex<System>> = Arc::new(Mutex::new(System::new_all()));
     static ref NETWORKS: Arc<Mutex<Networks>> = Arc::new(Mutex::new(Networks::new_with_refreshed_list()));
+    static ref USERS: Arc<Mutex<Users>> = Arc::new(Mutex::new(Users::new_with_refreshed_list()));
 }
 
 // Get CPU usage information
@@ -159,10 +160,17 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let memory = cx.number(process.memory() as f64);
         obj.set(&mut cx, "memory", memory)?;
         
-        let user_id = process.user_id()
-            .map(|uid| uid.to_string())
-            .unwrap_or_else(|| "unknown".to_string());
-        let user = cx.string(user_id);
+        // Get user name from user ID
+        let users = USERS.lock().unwrap();
+        let user_name = if let Some(uid) = process.user_id() {
+            users.iter()
+                .find(|u| u.id() == uid)
+                .map(|u| u.name().to_string())
+                .unwrap_or_else(|| uid.to_string())
+        } else {
+            "unknown".to_string()
+        };
+        let user = cx.string(user_name);
         obj.set(&mut cx, "user", user)?;
         
         processes.set(&mut cx, i as u32, obj)?;
