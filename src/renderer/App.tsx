@@ -97,8 +97,8 @@ const App: React.FC = () => {
       <header className="header">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <svg
-            width="32"
-            height="32"
+            width="26"
+            height="26"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -109,7 +109,7 @@ const App: React.FC = () => {
             />
           </svg>
           <div>
-            <h2>Peep</h2>
+            <h3>Peep</h3>
           </div>
           </div>
       </header>
