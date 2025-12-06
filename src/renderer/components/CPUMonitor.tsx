@@ -50,32 +50,48 @@ const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
 
   const chartData = useMemo(() => {
     if (showPerCore && perCore.length > 0) {
-      // Generate per-core datasets
-      const colors = [
-        'rgb(102, 126, 234)',
-        'rgb(237, 100, 166)',
-        'rgb(255, 159, 64)',
-        'rgb(75, 192, 192)',
-        'rgb(153, 102, 255)',
-        'rgb(255, 205, 86)',
-        'rgb(201, 203, 207)',
-        'rgb(54, 162, 235)',
+      // Generate per-core datasets with color palette
+      const colorPalette = [
+        { border: 'rgb(102, 126, 234)', background: 'rgba(102, 126, 234, 0.1)' },
+        { border: 'rgb(237, 100, 166)', background: 'rgba(237, 100, 166, 0.1)' },
+        { border: 'rgb(255, 159, 64)', background: 'rgba(255, 159, 64, 0.1)' },
+        { border: 'rgb(75, 192, 192)', background: 'rgba(75, 192, 192, 0.1)' },
+        { border: 'rgb(153, 102, 255)', background: 'rgba(153, 102, 255, 0.1)' },
+        { border: 'rgb(255, 205, 86)', background: 'rgba(255, 205, 86, 0.1)' },
+        { border: 'rgb(201, 203, 207)', background: 'rgba(201, 203, 207, 0.1)' },
+        { border: 'rgb(54, 162, 235)', background: 'rgba(54, 162, 235, 0.1)' },
       ];
+      
+      // Generate additional colors for systems with many cores
+      const getColor = (index: number) => {
+        if (index < colorPalette.length) {
+          return colorPalette[index];
+        }
+        // Generate color based on hue rotation for cores beyond the palette
+        const hue = (index * 137.5) % 360; // Use golden angle for better distribution
+        return {
+          border: `hsl(${hue}, 70%, 60%)`,
+          background: `hsla(${hue}, 70%, 60%, 0.1)`
+        };
+      };
       
       return {
         labels: recentHistory.map((_, index) => {
           const minutesAgo = Math.floor((recentHistory.length - index - 1) * 2 / 60);
           return minutesAgo === 0 ? 'now' : `-${minutesAgo}m`;
         }),
-        datasets: perCore.map((_, coreIndex) => ({
-          label: `Core ${coreIndex}`,
-          data: recentHistory.map((d) => d.perCore?.[coreIndex] ?? 0),
-          borderColor: colors[coreIndex % colors.length],
-          backgroundColor: colors[coreIndex % colors.length].replace('rgb', 'rgba').replace(')', ', 0.1)'),
-          fill: false,
-          tension: 0.4,
-          pointRadius: 0,
-        })),
+        datasets: perCore.map((_, coreIndex) => {
+          const colors = getColor(coreIndex);
+          return {
+            label: `Core ${coreIndex}`,
+            data: recentHistory.map((d) => d.perCore?.[coreIndex] ?? 0),
+            borderColor: colors.border,
+            backgroundColor: colors.background,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0,
+          };
+        }),
       };
     } else {
       // Global CPU usage
@@ -162,8 +178,11 @@ const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
           <span style={{ opacity: showPerCore ? 0.6 : 1 }}>Global</span>
           <input
             type="checkbox"
+            role="switch"
             checked={showPerCore}
             onChange={(e) => setShowPerCore(e.target.checked)}
+            aria-label="Toggle between global and per-core CPU usage view"
+            aria-checked={showPerCore}
             style={{ 
               width: '40px',
               height: '20px',
