@@ -247,23 +247,52 @@ tbody tr:hover {
 }
 
 .kill-button {
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
+  color: #FFF;
+  background-color: rgba(249, 66, 66, 0.1);
+  transition: all 0.5s;
+  position: relative;
 }
-
 .kill-button:hover {
-  background: #c82333;
+  background-color: rgba(249, 66, 66, 0.9);
 }
-
-.kill-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+.kill-button span {
+  z-index: 10; 
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%; 
+}
+.kill-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transition: all 0.5s;
+  border: 1px solid rgba(249, 66, 66, 0.2);
+  background-color: rgba(249, 66, 66, 0.49);
+}
+.kill-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transition: all 0.5s;
+  border: 1px solid rgba(249, 66, 66, 0.2);
+  background-color: rgba(249, 66, 66, 0.49);
+}
+.kill-button:hover::before {
+  transform: rotate(-45deg);
+  background-color: rgba(249, 66, 66, 0.3);
+}
+.kill-button:hover::after {
+  transform: rotate(45deg);
+  background-color: rgba(249, 66, 66, 0.3);
 }
 
 .loading {

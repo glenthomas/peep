@@ -21,6 +21,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
 }) => {
   const [sortBy, setSortBy] = useState<"cpu" | "memory" | "pid">("cpu");
   const [sortDesc, setSortDesc] = useState(true);
+  const [selectedPid, setSelectedPid] = useState<number | null>(null);
 
   const handleSort = (column: "cpu" | "memory" | "pid") => {
     if (sortBy === column) {
@@ -78,19 +79,27 @@ const ProcessList: React.FC<ProcessListProps> = ({
         <button
           className="kill-button"
           onClick={() => {
-            const selectedPid = prompt("Enter PID to kill:");
-            if (selectedPid) {
-              const pid = parseInt(selectedPid, 10);
-              const process = processes.find((p) => p.pid === pid);
+            if (selectedPid !== null) {
+              const process = processes.find((p) => p.pid === selectedPid);
               if (process) {
-                handleKillProcess(pid, process.name);
-              } else {
-                alert("Process not found");
+                handleKillProcess(selectedPid, process.name);
               }
+            } else {
+              alert("Please select a process first");
             }
           }}
+          disabled={selectedPid === null}
+          style={{
+            padding: '8px 18px',
+            fontSize: '14px',
+            fontWeight: '500',
+            border: 'none',
+            cursor: selectedPid === null ? 'not-allowed' : 'pointer',
+            opacity: selectedPid === null ? 0.5 : 1,
+            position: 'relative',
+          }}
         >
-          Kill Process
+          <span style={{ position: 'relative', zIndex: 2 }}>Kill Process</span>
         </button>
       </div>
       <table>
@@ -114,7 +123,14 @@ const ProcessList: React.FC<ProcessListProps> = ({
         </thead>
         <tbody>
           {sortedProcesses.slice(0, 20).map((process) => (
-            <tr key={process.pid}>
+            <tr 
+              key={process.pid}
+              onClick={() => setSelectedPid(process.pid)}
+              style={{
+                backgroundColor: selectedPid === process.pid ? 'rgba(102, 126, 234, 0.2)' : 'transparent',
+                cursor: 'pointer'
+              }}
+            >
               <td>{process.pid}</td>
               <td>{process.name}</td>
               <td>{process.user}</td>
