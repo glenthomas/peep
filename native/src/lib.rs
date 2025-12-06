@@ -25,6 +25,15 @@ fn get_cpu_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     let cores = cx.number(sys.cpus().len() as f64);
     obj.set(&mut cx, "cores", cores)?;
     
+    // Get per-core CPU usage
+    let cpus = sys.cpus();
+    let per_core_array = JsArray::new(&mut cx, cpus.len());
+    for (i, cpu) in cpus.iter().enumerate() {
+        let core_usage = cx.number(cpu.cpu_usage() as f64);
+        per_core_array.set(&mut cx, i as u32, core_usage)?;
+    }
+    obj.set(&mut cx, "perCore", per_core_array)?;
+    
     Ok(obj)
 }
 
@@ -99,6 +108,16 @@ fn get_system_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     cpu_obj.set(&mut cx, "usage", cpu_usage)?;
     let cores = cx.number(sys.cpus().len() as f64);
     cpu_obj.set(&mut cx, "cores", cores)?;
+    
+    // Get per-core CPU usage
+    let cpus = sys.cpus();
+    let per_core_array = JsArray::new(&mut cx, cpus.len());
+    for (i, cpu) in cpus.iter().enumerate() {
+        let core_usage = cx.number(cpu.cpu_usage() as f64);
+        per_core_array.set(&mut cx, i as u32, core_usage)?;
+    }
+    cpu_obj.set(&mut cx, "perCore", per_core_array)?;
+    
     obj.set(&mut cx, "cpu", cpu_obj)?;
     
     // Memory info
