@@ -19,11 +19,17 @@ const ProcessList: React.FC<ProcessListProps> = ({
   processes,
   onKillProcess,
 }) => {
-  const [sortBy, setSortBy] = useState<"cpu" | "memory" | "pid" | "name" | "user">("cpu");
+  const [sortBy, setSortBy] = useState<
+    "cpu" | "memory" | "pid" | "name" | "user"
+  >("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [processToKill, setProcessToKill] = useState<{ pid: number; name: string } | null>(null);
+  const [processToKill, setProcessToKill] = useState<{
+    pid: number;
+    name: string;
+  } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSort = (column: "cpu" | "memory" | "pid" | "name" | "user") => {
     if (sortBy === column) {
@@ -57,24 +63,31 @@ const ProcessList: React.FC<ProcessListProps> = ({
     setProcessToKill(null);
   };
 
-  const sortedProcesses = [...processes].sort((a, b) => {
-    const aVal = a[sortBy];
-    const bVal = b[sortBy];
-    
-    // Handle string sorting for name and user
-    if (sortBy === "name" || sortBy === "user") {
-      const aStr = String(aVal).toLowerCase();
-      const bStr = String(bVal).toLowerCase();
-      if (sortDesc) {
-        return bStr.localeCompare(aStr);
-      } else {
-        return aStr.localeCompare(bStr);
+  const sortedProcesses = [...processes]
+    .filter((process) => {
+      if (!searchQuery) return true;
+      return process.name.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const aVal = a[sortBy];
+      const bVal = b[sortBy];
+
+      // Handle string sorting for name and user
+      if (sortBy === "name" || sortBy === "user") {
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        if (sortDesc) {
+          return bStr.localeCompare(aStr);
+        } else {
+          return aStr.localeCompare(bStr);
+        }
       }
-    }
-    
-    // Handle numeric sorting for cpu, memory, pid
-    return sortDesc ? (bVal as number) - (aVal as number) : (aVal as number) - (bVal as number);
-  });
+
+      // Handle numeric sorting for cpu, memory, pid
+      return sortDesc
+        ? (bVal as number) - (aVal as number)
+        : (aVal as number) - (bVal as number);
+    });
 
   return (
     <div className="process-table">
@@ -86,20 +99,49 @@ const ProcessList: React.FC<ProcessListProps> = ({
           marginBottom: "10px",
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <svg
             width="24"
             height="24"
             viewBox="0 0 16 16"
             fill="currentColor"
-            style={{ marginRight: "8px" }}
+            style={{ marginRight: "8px", display: "block" }}
           >
             <path
-              fill-rule="evenodd"
+              fillRule="evenodd"
               d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2"
             />
           </svg>
-          <h2>Running Processes ({processes.length})</h2>
+          <h2 style={{ margin: 0 }}>Running Processes ({sortedProcesses.length})</h2>
+          <div
+            style={{
+              marginLeft: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flex: 1,
+              justifyContent: "flex-end",
+            }}
+          >
+            <div style={{ position: "relative", flex: "0 1 300px" }}>
+              <input
+                type="text"
+                placeholder="Filter"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="clear-search"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         <button
           className="kill-button"
@@ -115,16 +157,16 @@ const ProcessList: React.FC<ProcessListProps> = ({
           }}
           disabled={selectedPid === null}
           style={{
-            padding: '8px 18px',
-            fontSize: '14px',
-            fontWeight: '500',
-            border: 'none',
-            cursor: selectedPid === null ? 'not-allowed' : 'pointer',
+            padding: "8px 18px",
+            fontSize: "14px",
+            fontWeight: "500",
+            border: "none",
+            cursor: selectedPid === null ? "not-allowed" : "pointer",
             opacity: selectedPid === null ? 0.5 : 1,
-            position: 'relative',
+            position: "relative",
           }}
         >
-          <span style={{ position: 'relative', zIndex: 2 }}>Kill Process</span>
+          <span style={{ position: "relative", zIndex: 2 }}>Kill Process</span>
         </button>
       </div>
       <table>
@@ -133,10 +175,16 @@ const ProcessList: React.FC<ProcessListProps> = ({
             <th onClick={() => handleSort("pid")} style={{ cursor: "pointer" }}>
               PID {sortBy === "pid" && (sortDesc ? "↓" : "↑")}
             </th>
-            <th onClick={() => handleSort("name")} style={{ cursor: "pointer" }}>
+            <th
+              onClick={() => handleSort("name")}
+              style={{ cursor: "pointer" }}
+            >
               Name {sortBy === "name" && (sortDesc ? "↓" : "↑")}
             </th>
-            <th onClick={() => handleSort("user")} style={{ cursor: "pointer" }}>
+            <th
+              onClick={() => handleSort("user")}
+              style={{ cursor: "pointer" }}
+            >
               User {sortBy === "user" && (sortDesc ? "↓" : "↑")}
             </th>
             <th onClick={() => handleSort("cpu")} style={{ cursor: "pointer" }}>
@@ -152,12 +200,15 @@ const ProcessList: React.FC<ProcessListProps> = ({
         </thead>
         <tbody>
           {sortedProcesses.map((process) => (
-            <tr 
+            <tr
               key={process.pid}
               onClick={() => setSelectedPid(process.pid)}
               style={{
-                backgroundColor: selectedPid === process.pid ? 'rgba(102, 126, 234, 0.2)' : 'transparent',
-                cursor: 'pointer'
+                backgroundColor:
+                  selectedPid === process.pid
+                    ? "rgba(102, 126, 234, 0.2)"
+                    : "transparent",
+                cursor: "pointer",
               }}
             >
               <td>{process.pid}</td>
@@ -174,13 +225,15 @@ const ProcessList: React.FC<ProcessListProps> = ({
           No processes found
         </p>
       )}
-      
+
       {showConfirmDialog && processToKill && (
         <div className="modal-overlay">
           <div className="modal-dialog">
             <h3>Confirm Kill Process</h3>
             <p>
-              Are you sure you want to kill process <strong>"{processToKill.name}"</strong> (PID: {processToKill.pid})?
+              Are you sure you want to kill process{" "}
+              <strong>"{processToKill.name}"</strong> (PID: {processToKill.pid}
+              )?
             </p>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={cancelKill}>
