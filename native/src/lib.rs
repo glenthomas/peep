@@ -517,6 +517,13 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let user = cx.string(user_name);
         obj.set(&mut cx, "user", user)?;
         
+        // Get disk I/O statistics
+        let disk_usage = process.disk_usage();
+        let disk_read = cx.number(disk_usage.read_bytes as f64);
+        obj.set(&mut cx, "diskRead", disk_read)?;
+        let disk_write = cx.number(disk_usage.written_bytes as f64);
+        obj.set(&mut cx, "diskWrite", disk_write)?;
+        
         processes.set(&mut cx, i as u32, obj)?;
     }
     
