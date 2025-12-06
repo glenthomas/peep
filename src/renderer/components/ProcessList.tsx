@@ -356,6 +356,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 <button
                   onClick={() => onToggleThreads()}
                   disabled={!showThreads}
+                  title="Exclude threads"
                   style={{
                     padding: "6px 12px",
                     fontSize: "12px",
@@ -373,6 +374,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 <button
                   onClick={() => onToggleThreads()}
                   disabled={showThreads}
+                  title="Include processes and threads"
                   style={{
                     padding: "6px 12px",
                     fontSize: "12px",
