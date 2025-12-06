@@ -186,6 +186,96 @@ const App: React.FC = () => {
             <h3>Peep</h3>
           </div>
         </div>
+        
+        {/* Battery Status in Center */}
+        {batteryInfo?.available && (() => {
+          const percentage = Math.round(batteryInfo.percentage || 0);
+          const state = batteryInfo.state || "Unknown";
+          const isCharging = state.toLowerCase().includes("charging");
+          const isFull = state.toLowerCase().includes("full");
+          const getBatteryColor = (pct: number) => {
+            if (pct > 60) return "var(--color-success)";
+            if (pct > 20) return "var(--color-warning)";
+            return "var(--color-danger)";
+          };
+          const getStateIcon = (st: string) => {
+            const stateLower = st.toLowerCase();
+            if (stateLower.includes("charging")) return "⚡";
+            if (stateLower.includes("discharging")) return "🔋";
+            if (stateLower.includes("full")) return "✓";
+            return "•";
+          };
+          const formatTime = (minutes: number | undefined): string => {
+            if (minutes === undefined || minutes === null || !isFinite(minutes) || minutes <= 0) {
+              return "";
+            }
+            if (minutes < 1) return "< 1 min";
+            const hours = Math.floor(minutes / 60);
+            const mins = Math.floor(minutes % 60);
+            if (hours > 0) return `${hours}h ${mins}m`;
+            return `${mins}m`;
+          };
+          
+          const timeInfo = isCharging && batteryInfo.timeToFull > 0
+            ? formatTime(batteryInfo.timeToFull)
+            : !isCharging && !isFull && batteryInfo.timeToEmpty > 0
+            ? formatTime(batteryInfo.timeToEmpty)
+            : "";
+          
+          return (
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "12px",
+              fontSize: "13px",
+              color: "var(--color-text-primary)"
+            }}>
+              {/* Battery Icon */}
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: "3px",
+                width: "32px",
+                height: "16px",
+                padding: "2px",
+                position: "relative"
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${percentage}%`,
+                  backgroundColor: getBatteryColor(percentage),
+                  borderRadius: "1px",
+                  transition: "width 0.3s ease"
+                }} />
+                <div style={{
+                  position: "absolute",
+                  right: "-4px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: "3px",
+                  height: "8px",
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  borderRadius: "0 2px 2px 0"
+                }} />
+              </div>
+              
+              {/* Battery Info */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontWeight: "600" }}>{percentage}%</span>
+                <span>
+                  {getStateIcon(state)} {state}
+                </span>
+                {timeInfo && (
+                  <span style={{ fontSize: "12px" }}>
+                    ({timeInfo})
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {osInfo && (
           <div style={{ 
             fontSize: "12px", 
@@ -210,7 +300,7 @@ const App: React.FC = () => {
           <MemoryMonitor data={systemInfo?.memory} history={history} />
           <DiskMonitor data={systemInfo?.disk} history={history} />
           <NetworkMonitor data={systemInfo?.network} history={history} />
-          {batteryInfo?.available && <BatteryMonitor batteryInfo={batteryInfo} />}
+          {/* {batteryInfo?.available && <BatteryMonitor batteryInfo={batteryInfo} />} */}
         </div>
         <ProcessList
           processes={processes}
