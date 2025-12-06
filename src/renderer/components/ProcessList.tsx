@@ -22,6 +22,8 @@ const ProcessList: React.FC<ProcessListProps> = ({
   const [sortBy, setSortBy] = useState<"cpu" | "memory" | "pid">("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [processToKill, setProcessToKill] = useState<{ pid: number; name: string } | null>(null);
 
   const handleSort = (column: "cpu" | "memory" | "pid") => {
     if (sortBy === column) {
@@ -33,16 +35,26 @@ const ProcessList: React.FC<ProcessListProps> = ({
   };
 
   const handleKillProcess = async (pid: number, name: string) => {
-    if (
-      confirm(`Are you sure you want to kill process "${name}" (PID: ${pid})?`)
-    ) {
-      const result = await onKillProcess(pid);
+    setProcessToKill({ pid, name });
+    setShowConfirmDialog(true);
+  };
+
+  const confirmKill = async () => {
+    if (processToKill) {
+      const result = await onKillProcess(processToKill.pid);
       if (result.success) {
-        alert(`Process killed successfully`);
+        setSelectedPid(null);
       } else {
         alert(`Failed to kill process: ${result.message}`);
       }
     }
+    setShowConfirmDialog(false);
+    setProcessToKill(null);
+  };
+
+  const cancelKill = () => {
+    setShowConfirmDialog(false);
+    setProcessToKill(null);
   };
 
   const sortedProcesses = [...processes].sort((a, b) => {
@@ -122,7 +134,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {sortedProcesses.slice(0, 20).map((process) => (
+          {sortedProcesses.map((process) => (
             <tr 
               key={process.pid}
               onClick={() => setSelectedPid(process.pid)}
@@ -144,6 +156,25 @@ const ProcessList: React.FC<ProcessListProps> = ({
         <p style={{ textAlign: "center", padding: "20px", color: "#999" }}>
           No processes found
         </p>
+      )}
+      
+      {showConfirmDialog && processToKill && (
+        <div className="modal-overlay">
+          <div className="modal-dialog">
+            <h3>Confirm Kill Process</h3>
+            <p>
+              Are you sure you want to kill process <strong>"{processToKill.name}"</strong> (PID: {processToKill.pid})?
+            </p>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={cancelKill}>
+                Cancel
+              </button>
+              <button className="btn-confirm" onClick={confirmKill}>
+                Kill Process
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

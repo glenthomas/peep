@@ -252,7 +252,7 @@ tbody tr:hover {
   transition: all 0.5s;
   position: relative;
 }
-.kill-button:hover {
+.kill-button:hover:not(:disabled) {
   background-color: rgba(249, 66, 66, 0.9);
 }
 .kill-button span {
@@ -286,11 +286,11 @@ tbody tr:hover {
   border: 1px solid rgba(249, 66, 66, 0.2);
   background-color: rgba(249, 66, 66, 0.49);
 }
-.kill-button:hover::before {
+.kill-button:hover:not(:disabled)::before {
   transform: rotate(-45deg);
   background-color: rgba(249, 66, 66, 0.3);
 }
-.kill-button:hover::after {
+.kill-button:hover:not(:disabled)::after {
   transform: rotate(45deg);
   background-color: rgba(249, 66, 66, 0.3);
 }
@@ -311,4 +311,96 @@ tbody tr:hover {
   color: #721c24;
   border: 1px solid #f5c6cb;
   border-radius: 8px;
+}
+
+/* Modal Dialog Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-dialog {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-dialog h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.modal-dialog p {
+  margin: 0 0 24px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.modal-dialog p strong {
+  color: #c0392b;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background: #d0d0d0;
+}
+
+.btn-confirm {
+  background: #c0392b;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background: #a53125;
+}
+
+.btn-cancel:active,
+.btn-confirm:active {
+  transform: scale(0.98);
 }
