@@ -4,13 +4,8 @@
   /* Light theme colors */
   --color-bg-primary: rgb(10, 20, 49);
   --color-bg-secondary: rgb(19, 41, 110);
-  --color-bg-tertiary: #e8e8e8;
   --color-text-primary: rgb(8, 222, 158);
   --color-text-secondary: rgb(255, 253, 253);
-  --color-text-muted: #999999;
-  --color-border: #e0e0e0;
-  --color-accent: rgb(8, 222, 158);
-  --color-accent-hover: #d58917;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
@@ -26,15 +21,6 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
 
   /* Font sizes */
   --font-xs: 11px;
