@@ -485,6 +485,10 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let run_time = cx.number(uptime as f64);
         obj.set(&mut cx, "runTime", run_time)?;
         
+        // Get CPU time (total time process has spent on CPU in seconds)
+        let cpu_time = cx.number(process.run_time() as f64);
+        obj.set(&mut cx, "cpuTime", cpu_time)?;
+        
         // Get process status - format it nicely
         let status_str = match process.status() {
             sysinfo::ProcessStatus::Run => "Running",
