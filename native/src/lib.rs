@@ -190,6 +190,25 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let run_time = cx.number(uptime as f64);
         obj.set(&mut cx, "runTime", run_time)?;
         
+        // Get process status - format it nicely
+        let status_str = match process.status() {
+            sysinfo::ProcessStatus::Run => "Running",
+            sysinfo::ProcessStatus::Sleep => "Sleep",
+            sysinfo::ProcessStatus::Idle => "Idle",
+            sysinfo::ProcessStatus::Zombie => "Zombie",
+            sysinfo::ProcessStatus::Stop => "Stopped",
+            sysinfo::ProcessStatus::Dead => "Dead",
+            sysinfo::ProcessStatus::Tracing => "Tracing",
+            sysinfo::ProcessStatus::Wakekill => "Wakekill",
+            sysinfo::ProcessStatus::Waking => "Waking",
+            sysinfo::ProcessStatus::Parked => "Parked",
+            sysinfo::ProcessStatus::LockBlocked => "Blocked",
+            sysinfo::ProcessStatus::UninterruptibleDiskSleep => "DiskSleep",
+            _ => "Unknown",
+        };
+        let status = cx.string(status_str);
+        obj.set(&mut cx, "status", status)?;
+        
         // Get user name from user ID
         let users = USERS.lock().unwrap();
         let user_name = if let Some(uid) = process.user_id() {

@@ -8,6 +8,7 @@ interface Process {
   memoryPercentage: number;
   user: string;
   runTime: number;
+  status: string;
 }
 
 interface ProcessListProps {
@@ -42,7 +43,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   onKillProcess,
 }) => {
   const [sortBy, setSortBy] = useState<
-    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime"
+    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status"
   >("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
@@ -53,7 +54,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime") => {
+  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status") => {
     if (sortBy === column) {
       setSortDesc(!sortDesc);
     } else {
@@ -95,7 +96,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
       const bVal = b[sortBy];
 
       // Handle string sorting for name and user
-      if (sortBy === "name" || sortBy === "user") {
+      if (sortBy === "name" || sortBy === "user" || sortBy === "status") {
         const aStr = String(aVal).toLowerCase();
         const bStr = String(bVal).toLowerCase();
         if (sortDesc) {
@@ -209,6 +210,12 @@ const ProcessList: React.FC<ProcessListProps> = ({
             >
               User {sortBy === "user" && (sortDesc ? "↓" : "↑")}
             </th>
+            <th
+              onClick={() => handleSort("status")}
+              style={{ cursor: "pointer" }}
+            >
+              Status {sortBy === "status" && (sortDesc ? "↓" : "↑")}
+            </th>
             <th onClick={() => handleSort("cpu")} style={{ cursor: "pointer" }}>
               CPU % {sortBy === "cpu" && (sortDesc ? "↓" : "↑")}
             </th>
@@ -248,6 +255,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
               <td>{process.pid}</td>
               <td>{process.name}</td>
               <td>{process.user}</td>
+              <td>{process.status}</td>
               <td>{process.cpu.toFixed(1)}%</td>
               <td>{formatBytes(process.memoryBytes)}</td>
               <td>{process.memoryPercentage.toFixed(1)}%</td>
