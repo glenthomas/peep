@@ -55,15 +55,15 @@ jobs:
           npm run build:preload
           npm run build:renderer
 
-      - name: Package application
+      - name: Package and publish
         run: |
-          # Build both zip and dmg with retries for dmg
-          npx electron-builder --mac zip --${{ matrix.arch }}
+          # Build and publish both zip and dmg with retries for dmg
+          npx electron-builder --mac zip --${{ matrix.arch }} --publish always
           
           # DMG can be flaky on CI, retry up to 3 times
           for i in 1 2 3; do
             echo "DMG build attempt $i..."
-            if npx electron-builder --mac dmg --${{ matrix.arch }}; then
+            if npx electron-builder --mac dmg --${{ matrix.arch }} --publish always; then
               echo "DMG build succeeded on attempt $i"
               break
             fi
@@ -76,43 +76,3 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v5
-        with:
-          name: peep-macos-${{ matrix.arch }}
-          path: |
-            release/*.dmg
-            release/*.zip
-          if-no-files-found: error
-
-  create-release:
-    needs: build-macos
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v6
-        with:
-          path: artifacts
-
-      - name: Display structure of downloaded files
-        run: ls -la artifacts/
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: false
-          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
-          generate_release_notes: true
-          files: |
-            artifacts/**/*.dmg
-            artifacts/**/*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
