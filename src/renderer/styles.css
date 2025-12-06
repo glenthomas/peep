@@ -205,9 +205,9 @@ body {
 
 .gauge-text {
   position: absolute;
-  top: 50%;
+  bottom: 5px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   text-align: center;
 }
 

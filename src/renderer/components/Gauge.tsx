@@ -10,11 +10,12 @@ interface GaugeProps {
 
 const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', color }) => {
   const percentage = Math.min((value / max) * 100, 100);
-  const size = 160;
-  const strokeWidth = 14;
+  const size = 128; // Reduced from 160 (20% smaller)
+  const strokeWidth = 11; // Reduced proportionally
   const radius = (size - strokeWidth) / 2;
   const centerX = size / 2;
-  const centerY = size / 2;
+  const centerY = strokeWidth / 2 + radius; // Position arc at top of reduced SVG
+  const svgHeight = radius + strokeWidth + 22; // Just enough for arc + text below
   
   // Create semi-circle arc (180 degrees) - bottom half
   const startAngle = -90;
@@ -63,7 +64,11 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
 
   return (
     <div className="gauge-container">
-      <svg height={size} width={size} style={{ overflow: 'visible' }}>
+      <svg 
+        height={svgHeight} 
+        width={size} 
+        style={{ overflow: 'visible', display: 'block' }}
+      >
         {/* Background arc */}
         <path
           d={arcPath}
@@ -124,11 +129,26 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           fill={'#7d8899'}
           style={{ transition: 'fill 0.5s ease' }}
         />
+        {/* Value text */}
+        <text
+          x={centerX}
+          y={centerY + 20}
+          textAnchor="middle"
+          className="gauge-value"
+          style={{ fontSize: '16px', fontWeight: 600, fill: 'var(--color-text-secondary)' }}
+        >
+          {value.toFixed(1)}{unit}
+        </text>
+        <text
+          x={centerX}
+          y={centerY + 34}
+          textAnchor="middle"
+          className="gauge-label"
+          style={{ fontSize: '10px', fill: 'var(--color-text-primary)' }}
+        >
+          {label}
+        </text>
       </svg>
-      <div className="gauge-text">
-        <div className="gauge-value">{value.toFixed(1)}{unit}</div>
-        <div className="gauge-label">{label}</div>
-      </div>
     </div>
   );
 };
