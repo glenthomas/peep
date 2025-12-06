@@ -1,30 +1,124 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import Gauge from './Gauge';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 interface CPUMonitorProps {
   data?: {
     usage: number;
     cores: number;
   };
+  history?: Array<{
+    timestamp: number;
+    cpu: number;
+  }>;
 }
 
-const CPUMonitor: React.FC<CPUMonitorProps> = ({ data }) => {
+const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
   const usage = data?.usage ?? 0;
   const cores = data?.cores ?? 0;
 
+  // Get last 5 minutes of data (150 data points at 2-second intervals)
+  const recentHistory = useMemo(() => {
+    return history.slice(-150);
+  }, [history]);
+
+  const chartData = useMemo(() => {
+    return {
+      labels: recentHistory.map((_, index) => {
+        const minutesAgo = Math.floor((recentHistory.length - index - 1) * 2 / 60);
+        return minutesAgo === 0 ? 'now' : `-${minutesAgo}m`;
+      }),
+      datasets: [
+        {
+          label: 'CPU Usage (%)',
+          data: recentHistory.map((d) => d.cpu),
+          borderColor: 'rgb(102, 126, 234)',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [recentHistory]);
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: {
+          display: false,
+        },
+        ticks: {
+          maxTicksLimit: 6,
+          color: 'white',
+        },
+      },
+      y: {
+        display: true,
+        min: 0,
+        max: 100,
+        ticks: {
+          color: 'white',
+          callback: (value: any) => `${value}%`,
+        },
+      },
+    },
+  };
+
   return (
     <div className="card">
-      <h2>🖥️ CPU Usage</h2>
-      <div className="metric">
-        <span className="metric-label">Current Usage</span>
-        <span className="metric-value">{usage.toFixed(1)}%</span>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: '8px' }}>
+          <path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14a2.5 2.5 0 0 1-2.5 2.5v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14A2.5 2.5 0 0 1 2 11.5H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2A2.5 2.5 0 0 1 4.5 2V.5A.5.5 0 0 1 5 0m-.5 3A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h7a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 11.5 3zM5 6.5A1.5 1.5 0 0 1 6.5 5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5zM6.5 6a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z"/>
+        </svg>
+        <h2>CPU Usage</h2>
       </div>
-      <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${Math.min(usage, 100)}%` }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Gauge value={usage} label="Current Usage" unit="%" />
+        <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <span className="metric-label">CPU Cores</span>
+          <span className="metric-value">{cores}</span>
+        </div>
       </div>
-      <div className="metric" style={{ marginTop: '15px' }}>
-        <span className="metric-label">CPU Cores</span>
-        <span className="metric-value">{cores}</span>
-      </div>
+      {recentHistory.length > 0 && (
+        <div className="chart-container">
+          <Line data={chartData} options={chartOptions} />
+        </div>
+      )}
     </div>
   );
 };
