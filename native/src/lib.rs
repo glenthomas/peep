@@ -457,10 +457,22 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
     let mut sys = SYSTEM.lock().unwrap();
     sys.refresh_processes(ProcessesToUpdate::All, true);
     
-    let process_count = sys.processes().len();
+    // Filter out threads, only keep actual processes
+    let actual_processes: Vec<_> = sys.processes()
+        .iter()
+        .filter(|(_, process)| {
+            // On macOS, filter out threads - only include main processes
+            match process.thread_kind() {
+                Some(_) => false, // This is a thread, exclude it
+                None => true,     // This is a process, include it
+            }
+        })
+        .collect();
+    
+    let process_count = actual_processes.len();
     let processes = JsArray::new(&mut cx, process_count);
     
-    for (i, (pid, process)) in sys.processes().iter().enumerate() {
+    for (i, (pid, process)) in actual_processes.iter().enumerate() {
         let obj = cx.empty_object();
         
         let pid_num = cx.number(pid.as_u32() as f64);
