@@ -19,13 +19,13 @@ const ProcessList: React.FC<ProcessListProps> = ({
   processes,
   onKillProcess,
 }) => {
-  const [sortBy, setSortBy] = useState<"cpu" | "memory" | "pid">("cpu");
+  const [sortBy, setSortBy] = useState<"cpu" | "memory" | "pid" | "name" | "user">("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [processToKill, setProcessToKill] = useState<{ pid: number; name: string } | null>(null);
 
-  const handleSort = (column: "cpu" | "memory" | "pid") => {
+  const handleSort = (column: "cpu" | "memory" | "pid" | "name" | "user") => {
     if (sortBy === column) {
       setSortDesc(!sortDesc);
     } else {
@@ -60,7 +60,20 @@ const ProcessList: React.FC<ProcessListProps> = ({
   const sortedProcesses = [...processes].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
-    return sortDesc ? bVal - aVal : aVal - bVal;
+    
+    // Handle string sorting for name and user
+    if (sortBy === "name" || sortBy === "user") {
+      const aStr = String(aVal).toLowerCase();
+      const bStr = String(bVal).toLowerCase();
+      if (sortDesc) {
+        return bStr.localeCompare(aStr);
+      } else {
+        return aStr.localeCompare(bStr);
+      }
+    }
+    
+    // Handle numeric sorting for cpu, memory, pid
+    return sortDesc ? (bVal as number) - (aVal as number) : (aVal as number) - (bVal as number);
   });
 
   return (
@@ -120,8 +133,12 @@ const ProcessList: React.FC<ProcessListProps> = ({
             <th onClick={() => handleSort("pid")} style={{ cursor: "pointer" }}>
               PID {sortBy === "pid" && (sortDesc ? "↓" : "↑")}
             </th>
-            <th>Name</th>
-            <th>User</th>
+            <th onClick={() => handleSort("name")} style={{ cursor: "pointer" }}>
+              Name {sortBy === "name" && (sortDesc ? "↓" : "↑")}
+            </th>
+            <th onClick={() => handleSort("user")} style={{ cursor: "pointer" }}>
+              User {sortBy === "user" && (sortDesc ? "↓" : "↑")}
+            </th>
             <th onClick={() => handleSort("cpu")} style={{ cursor: "pointer" }}>
               CPU % {sortBy === "cpu" && (sortDesc ? "↓" : "↑")}
             </th>

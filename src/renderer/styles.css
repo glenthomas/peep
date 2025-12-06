@@ -115,6 +115,7 @@ body {
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 0;
 }
 
 .card:hover {
@@ -167,6 +168,13 @@ body {
 .chart-container {
   height: 200px;
   margin-top: 15px;
+  position: relative;
+  width: 100%;
+}
+
+.chart-container canvas {
+  max-width: 100%;
+  height: auto !important;
 }
 
 .gauge-container {
