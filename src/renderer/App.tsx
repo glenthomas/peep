@@ -168,7 +168,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      <header className="header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <header className="header" style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: "20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <svg
             width="26"
@@ -228,7 +228,8 @@ const App: React.FC = () => {
               alignItems: "center", 
               gap: "12px",
               fontSize: "13px",
-              color: "var(--color-text-primary)"
+              color: "var(--color-text-primary)",
+              justifyContent: "center"
             }}>
               {/* Battery Icon */}
               <div style={{ 
@@ -284,7 +285,18 @@ const App: React.FC = () => {
             fontFamily: "'Orbitron', monospace",
             textAlign: "right"
           }}>
-            <div>OS: {osInfo.name} {osInfo.version}</div>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              {osInfo.model && (
+                <span style={{ fontWeight: "500" }}>
+                  {osInfo.model}
+                </span>
+              )}
+              {osInfo.model && <span>•</span>}
+              <span>
+                {osInfo.name} {osInfo.version}
+                {osInfo.marketingName && ` (${osInfo.marketingName})`}
+              </span>
+            </div>
             {osInfo.uptime && (
               <div style={{ marginTop: "4px" }}>
                 Uptime: {formatUptime(osInfo.uptime)}

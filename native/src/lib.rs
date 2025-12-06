@@ -437,8 +437,45 @@ fn get_os_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     let os_name = cx.string(System::name().unwrap_or_else(|| "Unknown".to_string()));
     obj.set(&mut cx, "name", os_name)?;
     
-    let os_version = cx.string(System::os_version().unwrap_or_else(|| "Unknown".to_string()));
+    let os_version_str = System::os_version().unwrap_or_else(|| "Unknown".to_string());
+    let os_version = cx.string(&os_version_str);
     obj.set(&mut cx, "version", os_version)?;
+    
+    // Add macOS marketing name based on version
+    #[cfg(target_os = "macos")]
+    {
+        let marketing_name = if let Some(version) = os_version_str.split('.').next() {
+            match version {
+                "15" => "Sequoia",
+                "14" => "Sonoma",
+                "13" => "Ventura",
+                "12" => "Monterey",
+                "11" => "Big Sur",
+                "10" => {
+                    // For macOS 10.x, check the minor version
+                    if let Some(minor) = os_version_str.split('.').nth(1) {
+                        match minor {
+                            "15" => "Catalina",
+                            "14" => "Mojave",
+                            "13" => "High Sierra",
+                            "12" => "Sierra",
+                            _ => ""
+                        }
+                    } else {
+                        ""
+                    }
+                },
+                _ => ""
+            }
+        } else {
+            ""
+        };
+        
+        if !marketing_name.is_empty() {
+            let marketing_str = cx.string(marketing_name);
+            obj.set(&mut cx, "marketingName", marketing_str)?;
+        }
+    }
     
     let kernel_version = cx.string(System::kernel_version().unwrap_or_else(|| "Unknown".to_string()));
     obj.set(&mut cx, "kernelVersion", kernel_version)?;
@@ -448,6 +485,61 @@ fn get_os_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     
     let uptime = cx.number(System::uptime() as f64);
     obj.set(&mut cx, "uptime", uptime)?;
+    
+    // Get machine model (macOS specific)
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        if let Ok(output) = Command::new("sysctl")
+            .arg("-n")
+            .arg("hw.model")
+            .output()
+        {
+            if let Ok(model) = String::from_utf8(output.stdout) {
+                let model_id = model.trim();
+                // Map model identifiers to friendly names
+                let friendly_name = match model_id {
+                    // MacBook Pro 16-inch models
+                    "MacBookPro18,1" | "MacBookPro18,2" => "MacBook Pro (16-inch, 2021)",
+                    "MacBookPro18,3" | "MacBookPro18,4" => "MacBook Pro (14-inch, 2021)",
+                    "Mac14,5" | "Mac14,6" => "MacBook Pro (16-inch, 2023)",
+                    "Mac14,7" | "Mac14,9" => "MacBook Pro (14-inch, 2023)",
+                    "Mac15,3" | "Mac15,6" | "Mac15,7" | "Mac15,8" | "Mac15,9" | "Mac15,10" | "Mac15,11" => "MacBook Pro (14-inch, 2024)",
+                    
+                    // MacBook Air models
+                    "MacBookAir10,1" => "MacBook Air (M1, 2020)",
+                    "Mac14,2" => "MacBook Air (M2, 2022)",
+                    "Mac14,15" => "MacBook Air (15-inch, M2, 2023)",
+                    "Mac15,12" | "Mac15,13" => "MacBook Air (13-inch, M3, 2024)",
+                    
+                    // Mac Studio
+                    "Mac13,1" => "Mac Studio (2022)",
+                    "Mac14,13" | "Mac14,14" => "Mac Studio (2023)",
+                    
+                    // Mac mini
+                    "Macmini9,1" => "Mac mini (M1, 2020)",
+                    "Mac14,3" => "Mac mini (M2, 2023)",
+                    "Mac15,14" => "Mac mini (M4, 2024)",
+                    
+                    // iMac
+                    "iMac21,1" | "iMac21,2" => "iMac (24-inch, M1, 2021)",
+                    "Mac15,4" | "Mac15,5" => "iMac (24-inch, M4, 2024)",
+                    
+                    // Mac Pro
+                    "Mac14,8" => "Mac Pro (2023)",
+                    
+                    // Older Intel models (common ones)
+                    "MacBookPro16,1" => "MacBook Pro (16-inch, 2019)",
+                    "MacBookPro15,1" | "MacBookPro15,3" => "MacBook Pro (15-inch, 2018-2019)",
+                    "MacBookPro14,3" => "MacBook Pro (15-inch, 2017)",
+                    
+                    _ => model_id
+                };
+                let model_str = cx.string(friendly_name);
+                obj.set(&mut cx, "model", model_str)?;
+            }
+        }
+    }
     
     Ok(obj)
 }
