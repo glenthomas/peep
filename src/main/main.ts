@@ -92,7 +92,8 @@ ipcMain.handle('get-processes', async () => {
     
     return processes.map((proc: any) => ({
       ...proc,
-      memory: totalMemory > 0 ? (proc.memory / totalMemory) * 100 : 0,
+      memoryBytes: proc.memory,
+      memoryPercentage: totalMemory > 0 ? (proc.memory / totalMemory) * 100 : 0,
     }));
   } catch (error) {
     console.error('Error getting processes:', error);

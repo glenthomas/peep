@@ -4,7 +4,8 @@ interface Process {
   pid: number;
   name: string;
   cpu: number;
-  memory: number;
+  memoryBytes: number;
+  memoryPercentage: number;
   user: string;
 }
 
@@ -15,12 +16,20 @@ interface ProcessListProps {
   ) => Promise<{ success: boolean; message: string }>;
 }
 
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+};
+
 const ProcessList: React.FC<ProcessListProps> = ({
   processes,
   onKillProcess,
 }) => {
   const [sortBy, setSortBy] = useState<
-    "cpu" | "memory" | "pid" | "name" | "user"
+    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user"
   >("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
@@ -31,7 +40,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSort = (column: "cpu" | "memory" | "pid" | "name" | "user") => {
+  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user") => {
     if (sortBy === column) {
       setSortDesc(!sortDesc);
     } else {
@@ -191,10 +200,16 @@ const ProcessList: React.FC<ProcessListProps> = ({
               CPU % {sortBy === "cpu" && (sortDesc ? "↓" : "↑")}
             </th>
             <th
-              onClick={() => handleSort("memory")}
+              onClick={() => handleSort("memoryBytes")}
               style={{ cursor: "pointer" }}
             >
-              Memory % {sortBy === "memory" && (sortDesc ? "↓" : "↑")}
+              Memory {sortBy === "memoryBytes" && (sortDesc ? "↓" : "↑")}
+            </th>
+            <th
+              onClick={() => handleSort("memoryPercentage")}
+              style={{ cursor: "pointer" }}
+            >
+              Memory % {sortBy === "memoryPercentage" && (sortDesc ? "↓" : "↑")}
             </th>
           </tr>
         </thead>
@@ -215,7 +230,8 @@ const ProcessList: React.FC<ProcessListProps> = ({
               <td>{process.name}</td>
               <td>{process.user}</td>
               <td>{process.cpu.toFixed(1)}%</td>
-              <td>{process.memory.toFixed(1)}%</td>
+              <td>{formatBytes(process.memoryBytes)}</td>
+              <td>{process.memoryPercentage.toFixed(1)}%</td>
             </tr>
           ))}
         </tbody>
