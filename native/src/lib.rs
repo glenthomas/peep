@@ -180,6 +180,16 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let memory = cx.number(process.memory() as f64);
         obj.set(&mut cx, "memory", memory)?;
         
+        // Get process age (uptime in seconds) - current time minus start time
+        let current_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let start_time = process.start_time();
+        let uptime = current_time.saturating_sub(start_time);
+        let run_time = cx.number(uptime as f64);
+        obj.set(&mut cx, "runTime", run_time)?;
+        
         // Get user name from user ID
         let users = USERS.lock().unwrap();
         let user_name = if let Some(uid) = process.user_id() {

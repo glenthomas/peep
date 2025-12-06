@@ -7,6 +7,7 @@ interface Process {
   memoryBytes: number;
   memoryPercentage: number;
   user: string;
+  runTime: number;
 }
 
 interface ProcessListProps {
@@ -24,12 +25,24 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 };
 
+const formatRunTime = (seconds: number): string => {
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours < 24) return `${hours}h ${mins}m`;
+  const days = Math.floor(hours / 24);
+  const hrs = hours % 24;
+  return `${days}d ${hrs}h`;
+};
+
 const ProcessList: React.FC<ProcessListProps> = ({
   processes,
   onKillProcess,
 }) => {
   const [sortBy, setSortBy] = useState<
-    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user"
+    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime"
   >("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
@@ -40,7 +53,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user") => {
+  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime") => {
     if (sortBy === column) {
       setSortDesc(!sortDesc);
     } else {
@@ -211,6 +224,12 @@ const ProcessList: React.FC<ProcessListProps> = ({
             >
               Memory % {sortBy === "memoryPercentage" && (sortDesc ? "↓" : "↑")}
             </th>
+            <th
+              onClick={() => handleSort("runTime")}
+              style={{ cursor: "pointer" }}
+            >
+              Runtime {sortBy === "runTime" && (sortDesc ? "↓" : "↑")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -232,6 +251,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
               <td>{process.cpu.toFixed(1)}%</td>
               <td>{formatBytes(process.memoryBytes)}</td>
               <td>{process.memoryPercentage.toFixed(1)}%</td>
+              <td>{formatRunTime(process.runTime)}</td>
             </tr>
           ))}
         </tbody>
