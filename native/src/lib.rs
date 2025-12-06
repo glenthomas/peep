@@ -178,6 +178,25 @@ fn get_system_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     Ok(obj)
 }
 
+// Get OS information
+fn get_os_info(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let obj = cx.empty_object();
+    
+    let os_name = cx.string(System::name().unwrap_or_else(|| "Unknown".to_string()));
+    obj.set(&mut cx, "name", os_name)?;
+    
+    let os_version = cx.string(System::os_version().unwrap_or_else(|| "Unknown".to_string()));
+    obj.set(&mut cx, "version", os_version)?;
+    
+    let kernel_version = cx.string(System::kernel_version().unwrap_or_else(|| "Unknown".to_string()));
+    obj.set(&mut cx, "kernelVersion", kernel_version)?;
+    
+    let hostname = cx.string(System::host_name().unwrap_or_else(|| "Unknown".to_string()));
+    obj.set(&mut cx, "hostname", hostname)?;
+    
+    Ok(obj)
+}
+
 // Get list of processes
 fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
     let mut sys = SYSTEM.lock().unwrap();
@@ -355,6 +374,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getDiskInfo", get_disk_info)?;
     cx.export_function("getNetworkInfo", get_network_info)?;
     cx.export_function("getSystemInfo", get_system_info)?;
+    cx.export_function("getOsInfo", get_os_info)?;
     cx.export_function("getProcesses", get_processes)?;
     cx.export_function("getBatteryInfo", get_battery_info)?;
     cx.export_function("killProcess", kill_process)?;

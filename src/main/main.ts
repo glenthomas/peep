@@ -78,6 +78,20 @@ ipcMain.handle('get-system-info', async () => {
   }
 });
 
+ipcMain.handle('get-os-info', async () => {
+  try {
+    if (!native) {
+      return { name: 'Unknown', version: 'Unknown', kernelVersion: 'Unknown', hostname: 'Unknown' };
+    }
+    
+    const osInfo = native.getOsInfo();
+    return osInfo;
+  } catch (error) {
+    console.error('Error getting OS info:', error);
+    return { name: 'Unknown', version: 'Unknown', kernelVersion: 'Unknown', hostname: 'Unknown' };
+  }
+});
+
 ipcMain.handle('get-battery-info', async () => {
   try {
     if (!native) {

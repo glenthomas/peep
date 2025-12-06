@@ -12,6 +12,7 @@ declare global {
       getSystemInfo: () => Promise<any>;
       getProcesses: () => Promise<any[]>;
       getBatteryInfo: () => Promise<any>;
+      getOsInfo: () => Promise<any>;
       killProcess: (
         pid: number
       ) => Promise<{ success: boolean; message: string }>;
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [systemInfo, setSystemInfo] = useState<any>(null);
   const [processes, setProcesses] = useState<any[]>([]);
   const [batteryInfo, setBatteryInfo] = useState<any>(null);
+  const [osInfo, setOsInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoricalData[]>(() =>
@@ -47,6 +49,19 @@ const App: React.FC = () => {
       networkTx: 0,
     }))
   );
+
+  useEffect(() => {
+    // Fetch OS info once on mount
+    const fetchOsInfo = async () => {
+      try {
+        const info = await window.electronAPI.getOsInfo();
+        setOsInfo(info);
+      } catch (err) {
+        console.error('Failed to fetch OS info:', err);
+      }
+    };
+    fetchOsInfo();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,7 +116,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      <header className="header">
+      <header className="header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <svg
             width="26"
@@ -118,7 +133,17 @@ const App: React.FC = () => {
           <div>
             <h3>Peep</h3>
           </div>
+        </div>
+        {osInfo && (
+          <div style={{ 
+            fontSize: "12px", 
+            color: "var(--color-text-secondary)",
+            opacity: 0.8,
+            fontFamily: "'Orbitron', monospace"
+          }}>
+            {osInfo.name} {osInfo.version}
           </div>
+        )}
       </header>
       <main className="main-content">
         <div className="dashboard">

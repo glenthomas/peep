@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: (): Promise<SystemInfo | null> => ipcRenderer.invoke('get-system-info'),
   getProcesses: (): Promise<ProcessInfo[]> => ipcRenderer.invoke('get-processes'),
   getBatteryInfo: () => ipcRenderer.invoke('get-battery-info'),
+  getOsInfo: () => ipcRenderer.invoke('get-os-info'),
   killProcess: (pid: number): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('kill-process', pid),
 });
