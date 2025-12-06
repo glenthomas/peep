@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 interface Process {
   pid: number;
+  ppid: number;
   name: string;
   cpu: number;
   memoryBytes: number;
@@ -13,10 +14,13 @@ interface Process {
   command: string;
   diskRead: number;
   diskWrite: number;
+  isThread: boolean;
 }
 
 interface ProcessListProps {
   processes: Process[];
+  showThreads: boolean;
+  onToggleThreads: () => void;
   onKillProcess: (
     pid: number
   ) => Promise<{ success: boolean; message: string }>;
@@ -52,6 +56,8 @@ const formatCpuTime = (seconds: number): string => {
 
 const ProcessList: React.FC<ProcessListProps> = ({
   processes,
+  showThreads,
+  onToggleThreads,
   onKillProcess,
 }) => {
   const [sortBy, setSortBy] = useState<
@@ -66,18 +72,20 @@ const ProcessList: React.FC<ProcessListProps> = ({
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  const [showTreeView, setShowTreeView] = useState(false);
+  const [expandedPids, setExpandedPids] = useState<Set<number>>(new Set());
   
   // Column visibility state - command hidden by default
   const [visibleColumns, setVisibleColumns] = useState({
     pid: true,
     name: true,
-    user: true,
+    user: false,
     status: true,
     cpu: true,
     memory: true,
     memoryPercentage: true,
-    runTime: true,
-    cpuTime: true,
+    runTime: false,
+    cpuTime: false,
     command: false,
     diskRead: true,
     diskWrite: true,
@@ -122,6 +130,115 @@ const ProcessList: React.FC<ProcessListProps> = ({
     setProcessToKill(null);
   };
 
+  const toggleExpanded = (pid: number) => {
+    setExpandedPids(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(pid)) {
+        newSet.delete(pid);
+      } else {
+        newSet.add(pid);
+      }
+      return newSet;
+    });
+  };
+
+  // Build process tree structure
+  const buildProcessTree = (processes: Process[]) => {
+    const processMap = new Map<number, Process>();
+    const childrenMap = new Map<number, Process[]>();
+    
+    // First pass: create maps
+    processes.forEach(proc => {
+      processMap.set(proc.pid, proc);
+      if (!childrenMap.has(proc.ppid)) {
+        childrenMap.set(proc.ppid, []);
+      }
+    });
+    
+    // Second pass: build parent-child relationships
+    processes.forEach(proc => {
+      if (proc.ppid !== 0 && processMap.has(proc.ppid)) {
+        const children = childrenMap.get(proc.ppid) || [];
+        children.push(proc);
+        childrenMap.set(proc.ppid, children);
+      }
+    });
+    
+    // Find root processes (no parent or parent not in list)
+    const roots = processes.filter(proc => proc.ppid === 0 || !processMap.has(proc.ppid));
+    
+    return { processMap, childrenMap, roots };
+  };
+
+  const renderProcessTree = (process: Process, level: number, childrenMap: Map<number, Process[]>) => {
+    const children = childrenMap.get(process.pid) || [];
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedPids.has(process.pid);
+    const indent = level * 20;
+    
+    const rows = [];
+    rows.push(
+      <tr
+        key={process.pid}
+        onClick={() => setSelectedPid(process.pid)}
+        style={{
+          backgroundColor:
+            selectedPid === process.pid
+              ? "rgba(102, 126, 234, 0.2)"
+              : "transparent",
+          cursor: "pointer",
+        }}
+      >
+        {visibleColumns.pid && <td>{process.pid}</td>}
+        {visibleColumns.name && (
+          <td>
+            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: `${indent}px` }}>
+              {hasChildren && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpanded(process.pid);
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    marginRight: '4px',
+                    userSelect: 'none',
+                    width: '12px',
+                    display: 'inline-block'
+                  }}
+                >
+                  {isExpanded ? '▼' : '▶'}
+                </span>
+              )}
+              {!hasChildren && <span style={{ width: '16px', display: 'inline-block' }} />}
+              <span style={{ opacity: process.isThread ? 0.6 : 1, fontStyle: process.isThread ? 'italic' : 'normal' }}>
+                {process.name}
+              </span>
+            </div>
+          </td>
+        )}
+        {visibleColumns.user && <td>{process.user}</td>}
+        {visibleColumns.status && <td>{process.status}</td>}
+        {visibleColumns.cpu && <td>{process.cpu.toFixed(1)}%</td>}
+        {visibleColumns.memory && <td>{formatBytes(process.memoryBytes)}</td>}
+        {visibleColumns.memoryPercentage && <td>{process.memoryPercentage.toFixed(1)}%</td>}
+        {visibleColumns.runTime && <td>{formatRunTime(process.runTime)}</td>}
+        {visibleColumns.cpuTime && <td>{formatCpuTime(process.cpuTime)}</td>}
+        {visibleColumns.command && <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={process.command}>{process.command}</td>}
+        {visibleColumns.diskRead && <td>{formatBytes(process.diskRead)}</td>}
+        {visibleColumns.diskWrite && <td>{formatBytes(process.diskWrite)}</td>}
+      </tr>
+    );
+    
+    if (isExpanded && hasChildren) {
+      children.forEach(child => {
+        rows.push(...renderProcessTree(child, level + 1, childrenMap));
+      });
+    }
+    
+    return rows;
+  };
+
   const sortedProcesses = [...processes]
     .filter((process) => {
       if (!searchQuery) return true;
@@ -132,7 +249,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
       const bVal = b[sortBy];
 
       // Handle string sorting for name and user
-      if (sortBy === "name" || sortBy === "user" || sortBy === "status") {
+      if (sortBy === "name" || sortBy === "user" || sortBy === "status" || sortBy === "command") {
         const aStr = String(aVal).toLowerCase();
         const bStr = String(bVal).toLowerCase();
         if (sortDesc) {
@@ -200,26 +317,98 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 </button>
               )}
             </div>
-            <div style={{ position: "relative", marginLeft: "12px" }}>
-              <button
-                onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-                style={{
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  background: "rgba(255, 255, 255, 0.1)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: "6px",
-                  color: "var(--color-text-secondary)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                Columns
-                <span style={{ fontSize: "10px" }}>▼</span>
-              </button>
-              {showColumnDropdown && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* View Type Toggle */}
+              <div style={{ display: "flex", border: "1px solid rgba(255, 255, 255, 0.2)", borderRadius: "4px", overflow: "hidden" }}>
+                <button
+                  onClick={() => setShowTreeView(false)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: !showTreeView ? "rgba(102, 126, 234, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                    border: "none",
+                    borderRight: "1px solid rgba(255, 255, 255, 0.2)",
+                    color: "white",
+                    cursor: "pointer",
+                    fontWeight: !showTreeView ? "600" : "normal",
+                  }}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => setShowTreeView(true)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: showTreeView ? "rgba(102, 126, 234, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                    fontWeight: showTreeView ? "600" : "normal",
+                  }}
+                >
+                  Tree
+                </button>
+              </div>
+
+              {/* Show Threads Toggle */}
+              <div style={{ display: "flex", border: "1px solid rgba(255, 255, 255, 0.2)", borderRadius: "4px", overflow: "hidden" }}>
+                <button
+                  onClick={() => onToggleThreads()}
+                  disabled={!showThreads}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: !showThreads ? "rgba(102, 126, 234, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                    border: "none",
+                    borderRight: "1px solid rgba(255, 255, 255, 0.2)",
+                    color: "white",
+                    cursor: showThreads ? "pointer" : "default",
+                    fontWeight: !showThreads ? "600" : "normal",
+                    opacity: !showThreads ? 1 : 0.7,
+                  }}
+                >
+                  Processes
+                </button>
+                <button
+                  onClick={() => onToggleThreads()}
+                  disabled={showThreads}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: showThreads ? "rgba(102, 126, 234, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                    border: "none",
+                    color: "white",
+                    cursor: !showThreads ? "pointer" : "default",
+                    fontWeight: showThreads ? "600" : "normal",
+                    opacity: showThreads ? 1 : 0.7,
+                  }}
+                >
+                  All
+                </button>
+              </div>
+
+              {/* Columns Dropdown */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: "rgba(255, 255, 255, 0.1)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    borderRadius: "4px",
+                    color: "white",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  Columns
+                  <span style={{ fontSize: "10px" }}>▼</span>
+                </button>
+                {showColumnDropdown && (
                 <div
                   style={{
                     position: "absolute",
@@ -278,6 +467,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
@@ -403,7 +593,10 @@ const ProcessList: React.FC<ProcessListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {sortedProcesses.map((process) => (
+          {showTreeView ? (() => {
+            const { childrenMap, roots } = buildProcessTree(sortedProcesses);
+            return roots.flatMap(root => renderProcessTree(root, 0, childrenMap));
+          })() : sortedProcesses.map((process) => (
             <tr
               key={process.pid}
               onClick={() => setSelectedPid(process.pid)}
@@ -416,7 +609,11 @@ const ProcessList: React.FC<ProcessListProps> = ({
               }}
             >
               {visibleColumns.pid && <td>{process.pid}</td>}
-              {visibleColumns.name && <td>{process.name}</td>}
+              {visibleColumns.name && (
+                <td style={{ opacity: process.isThread ? 0.6 : 1, fontStyle: process.isThread ? 'italic' : 'normal' }}>
+                  {process.name}
+                </td>
+              )}
               {visibleColumns.user && <td>{process.user}</td>}
               {visibleColumns.status && <td>{process.status}</td>}
               {visibleColumns.cpu && <td>{process.cpu.toFixed(1)}%</td>}

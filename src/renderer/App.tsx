@@ -10,7 +10,7 @@ declare global {
   interface Window {
     electronAPI: {
       getSystemInfo: () => Promise<any>;
-      getProcesses: () => Promise<any[]>;
+      getProcesses: (showThreads?: boolean) => Promise<any[]>;
       getBatteryInfo: () => Promise<any>;
       getOsInfo: () => Promise<any>;
       killProcess: (
@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [osInfo, setOsInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showThreads, setShowThreads] = useState(false);
   
   // Track previous values for network rate calculation
   const [prevNetworkRx, setPrevNetworkRx] = useState<number>(0);
@@ -91,7 +92,7 @@ const App: React.FC = () => {
       try {
         const [info, procs, battery] = await Promise.all([
           window.electronAPI.getSystemInfo(),
-          window.electronAPI.getProcesses(),
+          window.electronAPI.getProcesses(showThreads),
           window.electronAPI.getBatteryInfo(),
         ]);
 
@@ -155,7 +156,7 @@ const App: React.FC = () => {
     const interval = setInterval(fetchData, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [showThreads]);
 
   if (loading) {
     return <div className="loading">Loading system information...</div>;
@@ -213,6 +214,8 @@ const App: React.FC = () => {
         </div>
         <ProcessList
           processes={processes}
+          showThreads={showThreads}
+          onToggleThreads={() => setShowThreads(!showThreads)}
           onKillProcess={async (pid) => {
             const result = await window.electronAPI.killProcess(pid);
             if (result.success) {

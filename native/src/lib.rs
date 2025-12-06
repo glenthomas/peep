@@ -454,17 +454,25 @@ fn get_os_info(mut cx: FunctionContext) -> JsResult<JsObject> {
 
 // Get list of processes
 fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
+    let show_threads = cx.argument::<JsBoolean>(0)
+        .map(|v| v.value(&mut cx))
+        .unwrap_or(false);
+    
     let mut sys = SYSTEM.lock().unwrap();
     sys.refresh_processes(ProcessesToUpdate::All, true);
     
-    // Filter out threads, only keep actual processes
+    // Optionally filter out threads based on parameter
     let actual_processes: Vec<_> = sys.processes()
         .iter()
         .filter(|(_, process)| {
-            // On macOS, filter out threads - only include main processes
-            match process.thread_kind() {
-                Some(_) => false, // This is a thread, exclude it
-                None => true,     // This is a process, include it
+            if show_threads {
+                true // Show everything
+            } else {
+                // Filter out threads, only keep actual processes
+                match process.thread_kind() {
+                    Some(_) => false, // This is a thread, exclude it
+                    None => true,     // This is a process, include it
+                }
             }
         })
         .collect();
@@ -480,6 +488,16 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         
         let name = cx.string(process.name().to_string_lossy());
         obj.set(&mut cx, "name", name)?;
+        
+        // Get parent PID
+        let parent_pid = process.parent().map(|p| p.as_u32()).unwrap_or(0);
+        let ppid_num = cx.number(parent_pid as f64);
+        obj.set(&mut cx, "ppid", ppid_num)?;
+        
+        // Check if this is a thread
+        let is_thread = process.thread_kind().is_some();
+        let is_thread_val = cx.boolean(is_thread);
+        obj.set(&mut cx, "isThread", is_thread_val)?;
         
         let cpu = cx.number(process.cpu_usage() as f64);
         obj.set(&mut cx, "cpu", cpu)?;

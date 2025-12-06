@@ -106,13 +106,13 @@ ipcMain.handle('get-battery-info', async () => {
   }
 });
 
-ipcMain.handle('get-processes', async () => {
+ipcMain.handle('get-processes', async (_event, showThreads: boolean = false) => {
   try {
     if (!native) {
       return [];
     }
     
-    const processes = native.getProcesses();
+    const processes = native.getProcesses(showThreads);
     
     // Calculate memory percentage based on total system memory
     const systemInfo = native.getSystemInfo();
