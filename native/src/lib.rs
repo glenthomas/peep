@@ -517,6 +517,15 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
         let user = cx.string(user_name);
         obj.set(&mut cx, "user", user)?;
         
+        // Get process command line
+        let cmd = process.cmd();
+        let command_str = cmd.iter()
+            .map(|s| s.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let command = cx.string(command_str);
+        obj.set(&mut cx, "command", command)?;
+        
         // Get disk I/O statistics
         let disk_usage = process.disk_usage();
         let disk_read = cx.number(disk_usage.read_bytes as f64);

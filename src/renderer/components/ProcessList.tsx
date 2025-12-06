@@ -9,6 +9,7 @@ interface Process {
   user: string;
   runTime: number;
   status: string;
+  command: string;
   diskRead: number;
   diskWrite: number;
 }
@@ -45,7 +46,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   onKillProcess,
 }) => {
   const [sortBy, setSortBy] = useState<
-    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status" | "diskRead" | "diskWrite"
+    "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status" | "command" | "diskRead" | "diskWrite"
   >("cpu");
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedPid, setSelectedPid] = useState<number | null>(null);
@@ -57,7 +58,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   
-  // Column visibility state - all visible by default
+  // Column visibility state - command hidden by default
   const [visibleColumns, setVisibleColumns] = useState({
     pid: true,
     name: true,
@@ -67,6 +68,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
     memory: true,
     memoryPercentage: true,
     runTime: true,
+    command: false,
     diskRead: true,
     diskWrite: true,
   });
@@ -78,7 +80,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
     }));
   };
 
-  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status" | "diskRead" | "diskWrite") => {
+  const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status" | "command" | "diskRead" | "diskWrite") => {
     if (sortBy === column) {
       setSortDesc(!sortDesc);
     } else {
@@ -231,6 +233,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
                     memory: "Memory",
                     memoryPercentage: "Memory %",
                     runTime: "Runtime",
+                    command: "Command",
                     diskRead: "Disk Read",
                     diskWrite: "Disk Write",
                   }).map(([key, label]) => (
@@ -354,6 +357,14 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 Runtime {sortBy === "runTime" && (sortDesc ? "↓" : "↑")}
               </th>
             )}
+            {visibleColumns.command && (
+              <th
+                onClick={() => handleSort("command")}
+                style={{ cursor: "pointer" }}
+              >
+                Command {sortBy === "command" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
             {visibleColumns.diskRead && (
               <th
                 onClick={() => handleSort("diskRead")}
@@ -393,6 +404,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
               {visibleColumns.memory && <td>{formatBytes(process.memoryBytes)}</td>}
               {visibleColumns.memoryPercentage && <td>{process.memoryPercentage.toFixed(1)}%</td>}
               {visibleColumns.runTime && <td>{formatRunTime(process.runTime)}</td>}
+              {visibleColumns.command && <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={process.command}>{process.command}</td>}
               {visibleColumns.diskRead && <td>{formatBytes(process.diskRead)}</td>}
               {visibleColumns.diskWrite && <td>{formatBytes(process.diskWrite)}</td>}
             </tr>
