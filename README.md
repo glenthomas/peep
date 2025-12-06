@@ -1,6 +1,6 @@
 # Peep - System Monitor
 
-![Peep Logo](images/dashboard.png)
+![Peep Logo](images/logo.png)
 
 [![GitHub Release](https://img.shields.io/github/v/release/glenthomas/peep?style=flat-square)](https://github.com/glenthomas/peep/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
