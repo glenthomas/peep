@@ -47,6 +47,12 @@ fn get_cpu_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     let cores = cx.number(sys.cpus().len() as f64);
     obj.set(&mut cx, "cores", cores)?;
     
+    // Get CPU brand/name (e.g., "Apple M1 Pro")
+    if let Some(cpu) = sys.cpus().first() {
+        let brand = cx.string(cpu.brand());
+        obj.set(&mut cx, "brand", brand)?;
+    }
+    
     // Get per-core CPU usage
     let cpus = sys.cpus();
     let per_core_array = JsArray::new(&mut cx, cpus.len());
@@ -248,6 +254,12 @@ fn get_system_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     cpu_obj.set(&mut cx, "usage", cpu_usage)?;
     let cores = cx.number(sys.cpus().len() as f64);
     cpu_obj.set(&mut cx, "cores", cores)?;
+    
+    // Get CPU brand/name (e.g., "Apple M1 Pro")
+    if let Some(cpu) = sys.cpus().first() {
+        let brand = cx.string(cpu.brand());
+        cpu_obj.set(&mut cx, "brand", brand)?;
+    }
     
     // Get per-core CPU usage
     let cpus = sys.cpus();
