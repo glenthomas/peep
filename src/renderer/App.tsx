@@ -200,9 +200,10 @@ const App: React.FC = () => {
           };
           const getStateIcon = (st: string) => {
             const stateLower = st.toLowerCase();
-            if (stateLower.includes("charging")) return "⚡";
-            if (stateLower.includes("discharging")) return "🔋";
-            if (stateLower.includes("full")) return "✓";
+            if (stateLower === "charging" || stateLower.startsWith("charging ")) return "⚡";
+            if (stateLower === "full" || stateLower.startsWith("full ")) return "✓";
+            if (stateLower === "discharging" || stateLower.startsWith("discharging ")) return "🔋";
+            if (stateLower === "empty" || stateLower.startsWith("empty ")) return "!";
             return "•";
           };
           const formatTime = (minutes: number | undefined): string => {
