@@ -20,6 +20,7 @@ declare global {
 interface HistoricalData {
   timestamp: number;
   cpu: number;
+  perCore?: number[];
   memory: number;
   diskRead: number;
   diskWrite: number;
@@ -60,6 +61,7 @@ const App: React.FC = () => {
         const newDataPoint: HistoricalData = {
           timestamp: Date.now(),
           cpu: info?.cpu?.usage ?? 0,
+          perCore: info?.cpu?.perCore ?? [],
           memory: info?.memory ? (info.memory.used / info.memory.total) * 100 : 0,
           diskRead: info?.disk?.read ?? 0,
           diskWrite: info?.disk?.write ?? 0,
