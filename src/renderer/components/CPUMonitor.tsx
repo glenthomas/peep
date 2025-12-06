@@ -175,7 +175,7 @@ const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
           fontSize: '14px',
           gap: '8px'
         }}>
-          <span style={{ opacity: showPerCore ? 0.6 : 1 }}>Global</span>
+          <span>Per-Core</span>
           <input
             type="checkbox"
             role="switch"
@@ -190,7 +190,6 @@ const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
               accentColor: 'rgb(102, 126, 234)'
             }}
           />
-          <span style={{ opacity: showPerCore ? 1 : 0.6 }}>Per-Core</span>
         </label>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

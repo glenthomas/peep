@@ -133,6 +133,10 @@ body {
   color: var(--color-text-primary);
 }
 
+.card label {
+  color: var(--color-text-secondary);
+}
+
 .metric {
   display: flex;
   justify-content: space-between;
