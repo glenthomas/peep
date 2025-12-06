@@ -2,7 +2,7 @@
 
 ![Peep Logo](https://img.shields.io/badge/Peep-System%20Monitor-purple?style=for-the-badge)
 
-A visually impressive system monitor application built with Electron and Rust. Monitor your system's performance in real-time with an elegant, modern interface.
+System monitor application built with Electron and Rust. Monitor your system's performance in real-time.
 
 ## Features
 
@@ -12,21 +12,19 @@ A visually impressive system monitor application built with Electron and Rust. M
 - **Network I/O** - Monitor network upload/download speeds
 - **Process Management** - View running processes with detailed information
 - **Process Control** - Kill processes directly from the application
-- **Modern UI** - Beautiful gradient design with smooth animations
 - **Native Performance** - Rust-powered native module for efficient system monitoring
 
 ## Screenshots
 
-*(Screenshots will be added after the application is built)*
+![Dashboard View](images/dashboard.png)
+
+![Process List](images/process_list.png)
 
 ## Technology Stack
 
 - **Frontend**: React + TypeScript
 - **Desktop Framework**: Electron
 - **Native Module**: Rust (via Neon)
-- **System Information**: sysinfo crate
-- **Build Tool**: Webpack
-- **Styling**: CSS3 with modern gradients and animations
 
 ## Prerequisites
 
@@ -46,7 +44,7 @@ Before building and running Peep, ensure you have the following installed:
 brew install node
 
 # Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+brew install rust
 ```
 
 ## Installation
@@ -60,11 +58,6 @@ cd peep
 2. Install dependencies:
 ```bash
 npm install
-```
-
-3. Build the native module:
-```bash
-npm run build:native
 ```
 
 ## Development
@@ -121,14 +114,14 @@ This will create a `.dmg` and `.zip` file in the `release` directory for macOS.
 Once the application is running:
 
 1. **Dashboard View**: The main screen displays four cards showing:
-   - CPU usage percentage and core count
-   - Memory usage with total/used/free metrics
-   - Disk I/O read/write speeds
-   - Network upload/download speeds
+   - CPU usage
+   - Memory usage
+   - Disk I/O
+   - Network upload/download
 
 2. **Process List**: Below the dashboard, you'll find a sortable table of running processes:
-   - Click column headers to sort by PID, CPU usage, or memory usage
-   - Click the "Kill" button to terminate a process (requires confirmation)
+   - Click column headers to sort
+   - Click the "Kill" button to terminate a process
 
 3. **Real-time Updates**: All metrics update automatically every 2 seconds
 
@@ -191,43 +184,6 @@ The native Rust module ensures minimal overhead when collecting system informati
 - < 2% CPU (mostly from Electron)
 - Updates every 2 seconds (configurable)
 
-## Troubleshooting
-
-### Native Module Build Fails
-
-If the native module fails to build:
-```bash
-# Clean the build
-rm -rf native/target
-rm -f native/index.node
-
-# Rebuild
-npm run build:native
-```
-
-### Application Won't Start
-
-1. Ensure all dependencies are installed: `npm install`
-2. Rebuild everything: `npm run build`
-3. Check that the native module built successfully: `ls native/index.node`
-
-**Common Error**: `Cannot find module '../../native/index.node'`
-- **Cause**: The native module hasn't been built yet
-- **Solution**: Run `npm run build:native` before `npm start`
-- **Explanation**: The Rust native module must be compiled to `native/index.node` before Electron can load it
-
-### Process Killing Not Working
-
-On macOS, you may need to grant additional permissions to the application. Some system processes cannot be killed by user applications.
-
-### Module Loading Issues
-
-If you see errors about loading the native module:
-1. Verify the native module exists: `ls -lh native/index.node`
-2. Check file permissions: `chmod +x native/index.node`
-3. Ensure you're running from the project root directory
-4. Try a clean rebuild: `npm run build`
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -236,27 +192,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - See LICENSE file for details
 
-## Acknowledgments
-
-- Built with [Electron](https://www.electronjs.org/)
-- Native bindings via [Neon](https://neon-bindings.com/)
-- System info from [sysinfo](https://github.com/GuillaumeGomez/sysinfo)
-- UI built with [React](https://reactjs.org/)
-
-## Roadmap
-
-- [ ] Add historical charts for CPU, memory, and network usage
-- [ ] Add disk usage visualization
-- [ ] Add system temperature monitoring
-- [ ] Add battery information for laptops
-- [ ] Add customizable refresh intervals
-- [ ] Add dark/light theme toggle
-- [ ] Add export functionality for system reports
-- [ ] Support for Linux and Windows platforms
-- [ ] Add notification system for alerts (high CPU, low memory, etc.)
-- [ ] Add process search and filtering
-
 ---
 
 Made with ⚡ by the Peep team
-
