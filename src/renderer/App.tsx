@@ -25,6 +25,7 @@ interface HistoricalData {
   cpu: number;
   perCore?: number[];
   memory: number;
+  swap: number;
   diskRead: number;
   diskWrite: number;
   networkRx: number;
@@ -38,11 +39,33 @@ const App: React.FC = () => {
   const [osInfo, setOsInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track previous values for network rate calculation
+  const [prevNetworkRx, setPrevNetworkRx] = useState<number>(0);
+  const [prevNetworkTx, setPrevNetworkTx] = useState<number>(0);
+  const [prevTimestamp, setPrevTimestamp] = useState<number>(Date.now());
+
+  // Format uptime into human-readable string
+  const formatUptime = (seconds: number): string => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
   const [history, setHistory] = useState<HistoricalData[]>(() =>
     Array.from({ length: 900 }, (_, i) => ({
       timestamp: Date.now() - (900 - i) * 2000,
       cpu: 0,
       memory: 0,
+      swap: 0,
       diskRead: 0,
       diskWrite: 0,
       networkRx: 0,
@@ -77,16 +100,44 @@ const App: React.FC = () => {
         setBatteryInfo(battery);
         setLoading(false);
 
+        // Network still needs rate calculation (cumulative totals)
+        const currentTimestamp = Date.now();
+        const timeDelta = (currentTimestamp - prevTimestamp) / 1000; // seconds
+        
+        const networkRx = info?.network?.rx ?? 0;
+        const networkTx = info?.network?.tx ?? 0;
+        
+        // Calculate network bytes per second
+        const networkRxRate = timeDelta > 0 ? (networkRx - prevNetworkRx) / timeDelta : 0;
+        const networkTxRate = timeDelta > 0 ? (networkTx - prevNetworkTx) / timeDelta : 0;
+        
+        // Update previous values
+        setPrevNetworkRx(networkRx);
+        setPrevNetworkTx(networkTx);
+        setPrevTimestamp(currentTimestamp);
+        
+        // Update systemInfo with network rates (disk values are already incremental)
+        const updatedInfo = {
+          ...info,
+          network: {
+            ...info?.network,
+            rx: Math.max(0, networkRxRate),
+            tx: Math.max(0, networkTxRate),
+          },
+        };
+        setSystemInfo(updatedInfo);
+
         // Add to history (keep last 30 minutes at 2-second intervals = 900 data points)
         const newDataPoint: HistoricalData = {
-          timestamp: Date.now(),
+          timestamp: currentTimestamp,
           cpu: info?.cpu?.usage ?? 0,
           perCore: info?.cpu?.perCore ?? [],
           memory: info?.memory ? (info.memory.used / info.memory.total) * 100 : 0,
+          swap: info?.memory && info.memory.totalSwap > 0 ? (info.memory.usedSwap / info.memory.totalSwap) * 100 : 0,
           diskRead: info?.disk?.read ?? 0,
           diskWrite: info?.disk?.write ?? 0,
-          networkRx: info?.network?.rx ?? 0,
-          networkTx: info?.network?.tx ?? 0,
+          networkRx: Math.max(0, networkRxRate),
+          networkTx: Math.max(0, networkTxRate),
         };
 
         setHistory((prev) => {
@@ -139,11 +190,18 @@ const App: React.FC = () => {
             fontSize: "12px", 
             color: "var(--color-text-secondary)",
             opacity: 0.8,
-            fontFamily: "'Orbitron', monospace"
+            fontFamily: "'Orbitron', monospace",
+            textAlign: "right"
           }}>
-            {osInfo.name} {osInfo.version}
+            <div>OS: {osInfo.name} {osInfo.version}</div>
+            {osInfo.uptime && (
+              <div style={{ marginTop: "4px" }}>
+                Uptime: {formatUptime(osInfo.uptime)}
+              </div>
+            )}
           </div>
         )}
+
       </header>
       <main className="main-content">
         <div className="dashboard">

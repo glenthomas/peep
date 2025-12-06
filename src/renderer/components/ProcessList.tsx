@@ -53,6 +53,26 @@ const ProcessList: React.FC<ProcessListProps> = ({
     name: string;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  
+  // Column visibility state - all visible by default
+  const [visibleColumns, setVisibleColumns] = useState({
+    pid: true,
+    name: true,
+    user: true,
+    status: true,
+    cpu: true,
+    memory: true,
+    memoryPercentage: true,
+    runTime: true,
+  });
+
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
 
   const handleSort = (column: "cpu" | "memoryBytes" | "memoryPercentage" | "pid" | "name" | "user" | "runTime" | "status") => {
     if (sortBy === column) {
@@ -135,7 +155,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
               d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2"
             />
           </svg>
-          <h2 style={{ margin: 0 }}>Running Processes ({sortedProcesses.length})</h2>
+          <h2 style={{ margin: 0 }}>Processes ({sortedProcesses.length})</h2>
           <div
             style={{
               marginLeft: "16px",
@@ -162,6 +182,81 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 >
                   ×
                 </button>
+              )}
+            </div>
+            <div style={{ position: "relative", marginLeft: "12px" }}>
+              <button
+                onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "6px",
+                  color: "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                Columns
+                <span style={{ fontSize: "10px" }}>▼</span>
+              </button>
+              {showColumnDropdown && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 4px)",
+                    right: 0,
+                    background: "var(--color-bg-secondary)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    borderRadius: "6px",
+                    padding: "8px",
+                    zIndex: 1000,
+                    minWidth: "150px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                  }}
+                >
+                  {Object.entries({
+                    pid: "PID",
+                    name: "Name",
+                    user: "User",
+                    status: "Status",
+                    cpu: "CPU %",
+                    memory: "Memory",
+                    memoryPercentage: "Memory %",
+                    runTime: "Runtime",
+                  }).map(([key, label]) => (
+                    <label
+                      key={key}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "6px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        color: "var(--color-text-secondary)",
+                        borderRadius: "4px",
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns[key as keyof typeof visibleColumns]}
+                        onChange={() => toggleColumn(key as keyof typeof visibleColumns)}
+                        style={{ marginRight: "8px", cursor: "pointer" }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -195,48 +290,64 @@ const ProcessList: React.FC<ProcessListProps> = ({
       <table>
         <thead>
           <tr>
-            <th onClick={() => handleSort("pid")} style={{ cursor: "pointer" }}>
-              PID {sortBy === "pid" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("name")}
-              style={{ cursor: "pointer" }}
-            >
-              Name {sortBy === "name" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("user")}
-              style={{ cursor: "pointer" }}
-            >
-              User {sortBy === "user" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("status")}
-              style={{ cursor: "pointer" }}
-            >
-              Status {sortBy === "status" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th onClick={() => handleSort("cpu")} style={{ cursor: "pointer" }}>
-              CPU % {sortBy === "cpu" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("memoryBytes")}
-              style={{ cursor: "pointer" }}
-            >
-              Memory {sortBy === "memoryBytes" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("memoryPercentage")}
-              style={{ cursor: "pointer" }}
-            >
-              Memory % {sortBy === "memoryPercentage" && (sortDesc ? "↓" : "↑")}
-            </th>
-            <th
-              onClick={() => handleSort("runTime")}
-              style={{ cursor: "pointer" }}
-            >
-              Runtime {sortBy === "runTime" && (sortDesc ? "↓" : "↑")}
-            </th>
+            {visibleColumns.pid && (
+              <th onClick={() => handleSort("pid")} style={{ cursor: "pointer" }}>
+                PID {sortBy === "pid" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.name && (
+              <th
+                onClick={() => handleSort("name")}
+                style={{ cursor: "pointer" }}
+              >
+                Name {sortBy === "name" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.user && (
+              <th
+                onClick={() => handleSort("user")}
+                style={{ cursor: "pointer" }}
+              >
+                User {sortBy === "user" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.status && (
+              <th
+                onClick={() => handleSort("status")}
+                style={{ cursor: "pointer" }}
+              >
+                Status {sortBy === "status" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.cpu && (
+              <th onClick={() => handleSort("cpu")} style={{ cursor: "pointer" }}>
+                CPU % {sortBy === "cpu" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.memory && (
+              <th
+                onClick={() => handleSort("memoryBytes")}
+                style={{ cursor: "pointer" }}
+              >
+                Memory {sortBy === "memoryBytes" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.memoryPercentage && (
+              <th
+                onClick={() => handleSort("memoryPercentage")}
+                style={{ cursor: "pointer" }}
+              >
+                Memory % {sortBy === "memoryPercentage" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
+            {visibleColumns.runTime && (
+              <th
+                onClick={() => handleSort("runTime")}
+                style={{ cursor: "pointer" }}
+              >
+                Runtime {sortBy === "runTime" && (sortDesc ? "↓" : "↑")}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -252,14 +363,14 @@ const ProcessList: React.FC<ProcessListProps> = ({
                 cursor: "pointer",
               }}
             >
-              <td>{process.pid}</td>
-              <td>{process.name}</td>
-              <td>{process.user}</td>
-              <td>{process.status}</td>
-              <td>{process.cpu.toFixed(1)}%</td>
-              <td>{formatBytes(process.memoryBytes)}</td>
-              <td>{process.memoryPercentage.toFixed(1)}%</td>
-              <td>{formatRunTime(process.runTime)}</td>
+              {visibleColumns.pid && <td>{process.pid}</td>}
+              {visibleColumns.name && <td>{process.name}</td>}
+              {visibleColumns.user && <td>{process.user}</td>}
+              {visibleColumns.status && <td>{process.status}</td>}
+              {visibleColumns.cpu && <td>{process.cpu.toFixed(1)}%</td>}
+              {visibleColumns.memory && <td>{formatBytes(process.memoryBytes)}</td>}
+              {visibleColumns.memoryPercentage && <td>{process.memoryPercentage.toFixed(1)}%</td>}
+              {visibleColumns.runTime && <td>{formatRunTime(process.runTime)}</td>}
             </tr>
           ))}
         </tbody>

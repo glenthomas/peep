@@ -27,6 +27,14 @@ interface DiskMonitorProps {
   data?: {
     read: number;
     write: number;
+    disks?: Array<{
+      name: string;
+      mountPoint: string;
+      totalSpace: number;
+      usedSpace: number;
+      availableSpace: number;
+      fileSystem: string;
+    }>;
   };
   history?: Array<{
     timestamp: number;
@@ -43,9 +51,18 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 };
 
+const formatStorage = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+};
+
 const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
   const read = data?.read ?? 0;
   const write = data?.write ?? 0;
+  const disks = data?.disks ?? [];
 
   // Get last 5 minutes of data (150 data points at 2-second intervals)
   const recentHistory = useMemo(() => {
@@ -135,18 +152,67 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
         Disk I/O
       </h2>
       </div>
-      <div className="metric">
-        <span className="metric-label">Read Speed</span>
-        <span className="metric-value">{formatBytes(read)}</span>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div>
+          <div className="metric">
+            <span className="metric-label">Read Speed</span>
+            <span className="metric-value">{formatBytes(read)}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Write Speed</span>
+            <span className="metric-value">{formatBytes(write)}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Total Throughput</span>
+            <span className="metric-value">{formatBytes(read + write)}</span>
+          </div>
+        </div>
+        
+        {disks.length > 0 && (
+          <div>
+            <h3 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--color-text-primary)', marginTop: 0 }}>Disk Usage</h3>
+            {disks.map((disk, index) => {
+              const usagePercent = disk.totalSpace > 0 ? (disk.usedSpace / disk.totalSpace) * 100 : 0;
+              return (
+                <div key={index} style={{ marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                      {disk.mountPoint}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--color-text-primary)' }}>
+                      {usagePercent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div style={{ 
+                    width: '100%', 
+                    height: '6px', 
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+                    borderRadius: '3px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{ 
+                      width: `${usagePercent}%`, 
+                      height: '100%', 
+                      backgroundColor: usagePercent > 90 ? 'var(--color-error)' : usagePercent > 70 ? 'var(--color-warning)' : 'var(--color-success)',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.7 }}>
+                      {formatStorage(disk.usedSpace)} used
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.7 }}>
+                      {formatStorage(disk.totalSpace)} total
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-      <div className="metric">
-        <span className="metric-label">Write Speed</span>
-        <span className="metric-value">{formatBytes(write)}</span>
-      </div>
-      <div className="metric">
-        <span className="metric-label">Total Throughput</span>
-        <span className="metric-value">{formatBytes(read + write)}</span>
-      </div>
+      
       {recentHistory.length > 0 && (
         <div className="chart-container">
           <Line data={chartData} options={chartOptions} />

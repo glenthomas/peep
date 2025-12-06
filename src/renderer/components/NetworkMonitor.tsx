@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -23,10 +23,20 @@ ChartJS.register(
   Filler
 );
 
+interface NetworkInterface {
+  name: string;
+  type: string;
+  received: number;
+  transmitted: number;
+  packetsReceived: number;
+  packetsTransmitted: number;
+}
+
 interface NetworkMonitorProps {
   data?: {
     rx: number;
     tx: number;
+    interfaces?: NetworkInterface[];
   };
   history?: Array<{
     timestamp: number;
@@ -43,9 +53,43 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 };
 
+const formatStorage = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+};
+
 const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) => {
   const rx = data?.rx ?? 0;
   const tx = data?.tx ?? 0;
+  const incomingInterfaces = data?.interfaces ?? [];
+
+  // Track interfaces that have ever had traffic (persist even when traffic stops)
+  const [persistedInterfaces, setPersistedInterfaces] = useState<Map<string, NetworkInterface>>(new Map());
+
+  useEffect(() => {
+    // Update persisted interfaces with new data
+    setPersistedInterfaces(prev => {
+      const updated = new Map(prev);
+      
+      incomingInterfaces.forEach(iface => {
+        // Only add interfaces that have had traffic (> 1KB)
+        if ((iface.received + iface.transmitted) > 1_000) {
+          updated.set(iface.name, iface);
+        } else if (updated.has(iface.name)) {
+          // Update existing interface even if traffic is now zero
+          updated.set(iface.name, iface);
+        }
+      });
+      
+      return updated;
+    });
+  }, [incomingInterfaces]);
+
+  // Convert map to array for rendering
+  const interfaces = Array.from(persistedInterfaces.values());
 
   // Get last 5 minutes of data (150 data points at 2-second intervals)
   const recentHistory = useMemo(() => {
@@ -133,18 +177,46 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
         </svg>
       <h2>Network I/O</h2>
       </div>
-      <div className="metric">
-        <span className="metric-label">Download (RX)</span>
-        <span className="metric-value">{formatBytes(rx)}</span>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div>
+          <div className="metric">
+            <span className="metric-label">Download (RX)</span>
+            <span className="metric-value">{formatBytes(rx)}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Upload (TX)</span>
+            <span className="metric-value">{formatBytes(tx)}</span>
+          </div>
+          <div className="metric">
+            <span className="metric-label">Total Bandwidth</span>
+            <span className="metric-value">{formatBytes(rx + tx)}</span>
+          </div>
+        </div>
+        
+          <div>
+            <h3 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--color-text-primary)', marginTop: 0 }}>Network Interfaces</h3>
+            {interfaces.map((iface, index) => (
+              <div key={index} style={{ marginBottom: '12px', fontSize: '12px' }}>
+                <div style={{ color: 'var(--color-text-primary)', fontWeight: '500', marginBottom: '2px' }}>
+                  {iface.name}
+                </div>
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: '10px', marginBottom: '4px', opacity: 0.8 }}>
+                  {iface.type}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-secondary)', fontSize: '11px' }}>
+                  <span>RX: {formatStorage(iface.received)}</span>
+                  <span>TX: {formatStorage(iface.transmitted)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-secondary)', fontSize: '11px', opacity: 0.7 }}>
+                  <span>↓ {iface.packetsReceived.toLocaleString()} pkts</span>
+                  <span>↑ {iface.packetsTransmitted.toLocaleString()} pkts</span>
+                </div>
+              </div>
+            ))}
+          </div>
       </div>
-      <div className="metric">
-        <span className="metric-label">Upload (TX)</span>
-        <span className="metric-value">{formatBytes(tx)}</span>
-      </div>
-      <div className="metric">
-        <span className="metric-label">Total Bandwidth</span>
-        <span className="metric-value">{formatBytes(rx + tx)}</span>
-      </div>
+      
       {recentHistory.length > 0 && (
         <div className="chart-container">
           <Line data={chartData} options={chartOptions} />

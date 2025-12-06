@@ -38,7 +38,7 @@ interface CPUMonitorProps {
 }
 
 const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
-  const [showPerCore, setShowPerCore] = React.useState(false);
+  const [showPerCore, setShowPerCore] = React.useState(true);
   const usage = data?.usage ?? 0;
   const cores = data?.cores ?? 0;
   const perCore = data?.perCore ?? [];

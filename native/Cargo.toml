@@ -9,6 +9,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 neon = "1.0"
-sysinfo = "0.31"
+sysinfo = "0.37.2"
 lazy_static = "1.4"
 battery = "0.7"

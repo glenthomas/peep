@@ -36,6 +36,7 @@ interface MemoryMonitorProps {
   history?: Array<{
     timestamp: number;
     memory: number;
+    swap: number;
   }>;
 }
 
@@ -77,6 +78,15 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
           tension: 0.4,
           pointRadius: 0,
         },
+        {
+          label: 'Swap Usage (%)',
+          data: recentHistory.map((d) => d.swap),
+          borderColor: 'rgb(239, 68, 68)',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+        },
       ],
     };
   }, [recentHistory]);
@@ -86,7 +96,10 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        labels: {
+          color: 'white',
+        },
       },
       tooltip: {
         mode: 'index' as const,
