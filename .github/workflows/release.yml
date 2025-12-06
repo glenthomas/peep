@@ -14,6 +14,8 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
+    permissions:
+      contents: write
     strategy:
       matrix:
         arch: [x64, arm64]
@@ -53,14 +55,25 @@ jobs:
           npm run build:preload
           npm run build:renderer
 
-      - name: Package application (zip)
-        run: npx electron-builder --mac zip --${{ matrix.arch }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Package application (dmg)
-        run: npx electron-builder --mac dmg --${{ matrix.arch }}
-        continue-on-error: true
+      - name: Package application
+        run: |
+          # Build both zip and dmg with retries for dmg
+          npx electron-builder --mac zip --${{ matrix.arch }}
+          
+          # DMG can be flaky on CI, retry up to 3 times
+          for i in 1 2 3; do
+            echo "DMG build attempt $i..."
+            if npx electron-builder --mac dmg --${{ matrix.arch }}; then
+              echo "DMG build succeeded on attempt $i"
+              break
+            fi
+            if [ $i -eq 3 ]; then
+              echo "DMG build failed after 3 attempts"
+              exit 1
+            fi
+            echo "Retrying in 10 seconds..."
+            sleep 10
+          done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -71,7 +84,7 @@ jobs:
           path: |
             release/*.dmg
             release/*.zip
-          if-no-files-found: warn
+          if-no-files-found: error
 
   create-release:
     needs: build-macos
