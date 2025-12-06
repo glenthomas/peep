@@ -1,8 +1,35 @@
 # Peep - System Monitor
 
-![Peep Logo](https://img.shields.io/badge/Peep-System%20Monitor-purple?style=for-the-badge)
+![Peep Logo](images/dashboard.png)
+
+[![GitHub Release](https://img.shields.io/github/v/release/glenthomas/peep?style=flat-square)](https://github.com/glenthomas/peep/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Build](https://img.shields.io/github/actions/workflow/status/glenthomas/peep/build.yml?branch=main&style=flat-square)](https://github.com/glenthomas/peep/actions)
 
 System monitor application built with Electron and Rust. Monitor your system's performance in real-time.
+
+## Download
+
+### macOS
+
+Download the latest release from the [Releases page](https://github.com/glenthomas/peep/releases/latest):
+
+| Architecture | Download |
+|-------------|----------|
+| Apple Silicon (M1/M2/M3) | [Peep-x.x.x-mac-arm64.dmg](https://github.com/glenthomas/peep/releases/latest) |
+| Intel | [Peep-x.x.x-mac-x64.dmg](https://github.com/glenthomas/peep/releases/latest) |
+
+#### Installation
+
+1. Download the `.dmg` file for your Mac architecture
+2. Open the downloaded `.dmg` file
+3. Drag **Peep** to your **Applications** folder
+4. On first launch, you may need to right-click and select "Open" to bypass Gatekeeper
+
+> **Note**: If you see "Peep is damaged and can't be opened", run this command in Terminal:
+> ```bash
+> xattr -cr /Applications/Peep.app
+> ```
 
 ## Features
 

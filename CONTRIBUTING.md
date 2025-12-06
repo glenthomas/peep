@@ -164,6 +164,48 @@ When adding Windows support:
 - Use context isolation in Electron
 - Keep dependencies updated
 
+## Creating a Release
+
+Releases are automated via GitHub Actions. When a version tag is pushed, the CI/CD pipeline will:
+1. Build for both Intel (x64) and Apple Silicon (arm64) Macs
+2. Create `.dmg` and `.zip` artifacts for each architecture
+3. Publish a GitHub Release with all artifacts
+
+### Steps to Create a Release
+
+1. **Update the version** in `package.json`:
+   ```bash
+   npm version <major|minor|patch>
+   # Example: npm version 1.1.0
+   ```
+
+2. **Push the tag** to GitHub:
+   ```bash
+   git push origin v1.1.0
+   ```
+
+3. The GitHub Actions workflow will automatically:
+   - Build the application for all supported platforms
+   - Create a draft release with generated release notes
+   - Attach all build artifacts
+
+### Version Numbering
+
+Follow [Semantic Versioning](https://semver.org/):
+- **MAJOR**: Breaking changes or major new features
+- **MINOR**: New features, backwards compatible
+- **PATCH**: Bug fixes, backwards compatible
+
+### Pre-releases
+
+For beta or alpha releases, use pre-release tags:
+```bash
+npm version 1.1.0-beta.1
+git push origin v1.1.0-beta.1
+```
+
+These will be marked as pre-releases on GitHub.
+
 ## Getting Help
 
 - Open an issue for bugs
