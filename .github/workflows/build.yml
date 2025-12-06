@@ -39,6 +39,6 @@ jobs:
         run: npm test
 
       - name: Package application (test)
-        run: npm run package
+        run: npx electron-builder --mac zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

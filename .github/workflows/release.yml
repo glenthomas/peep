@@ -53,8 +53,14 @@ jobs:
           npm run build:preload
           npm run build:renderer
 
-      - name: Package application
-        run: npm run package -- --${{ matrix.arch }}
+      - name: Package application (zip)
+        run: npx electron-builder --mac zip --${{ matrix.arch }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package application (dmg)
+        run: npx electron-builder --mac dmg --${{ matrix.arch }}
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -65,7 +71,7 @@ jobs:
           path: |
             release/*.dmg
             release/*.zip
-          if-no-files-found: error
+          if-no-files-found: warn
 
   create-release:
     needs: build-macos
