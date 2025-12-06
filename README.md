@@ -44,7 +44,6 @@ Download the latest release from the [Releases page](https://github.com/glenthom
 ## Screenshots
 
 ![Dashboard View](images/dashboard.png)
-
 ![Process List](images/process_list.png)
 
 ## Technology Stack
