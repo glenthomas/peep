@@ -53,6 +53,16 @@ fn get_memory_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     let free = cx.number(sys.free_memory() as f64);
     obj.set(&mut cx, "free", free)?;
     
+    // Swap memory info
+    let total_swap = cx.number(sys.total_swap() as f64);
+    obj.set(&mut cx, "totalSwap", total_swap)?;
+    
+    let used_swap = cx.number(sys.used_swap() as f64);
+    obj.set(&mut cx, "usedSwap", used_swap)?;
+    
+    let free_swap = cx.number(sys.free_swap() as f64);
+    obj.set(&mut cx, "freeSwap", free_swap)?;
+    
     Ok(obj)
 }
 
@@ -128,6 +138,17 @@ fn get_system_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     mem_obj.set(&mut cx, "used", used)?;
     let free = cx.number(sys.free_memory() as f64);
     mem_obj.set(&mut cx, "free", free)?;
+    
+    // Swap memory info
+    let total_swap = cx.number(sys.total_swap() as f64);
+    mem_obj.set(&mut cx, "totalSwap", total_swap)?;
+    
+    let used_swap = cx.number(sys.used_swap() as f64);
+    mem_obj.set(&mut cx, "usedSwap", used_swap)?;
+    
+    let free_swap = cx.number(sys.free_swap() as f64);
+    mem_obj.set(&mut cx, "freeSwap", free_swap)?;
+    
     obj.set(&mut cx, "memory", mem_obj)?;
     
     // Disk info (placeholder)

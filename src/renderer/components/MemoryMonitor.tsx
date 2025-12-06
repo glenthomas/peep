@@ -29,6 +29,9 @@ interface MemoryMonitorProps {
     total: number;
     used: number;
     free: number;
+    totalSwap: number;
+    usedSwap: number;
+    freeSwap: number;
   };
   history?: Array<{
     timestamp: number;
@@ -48,6 +51,10 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
   const total = data?.total ?? 0;
   const used = data?.used ?? 0;
   const usagePercent = total > 0 ? (used / total) * 100 : 0;
+  
+  const totalSwap = data?.totalSwap ?? 0;
+  const usedSwap = data?.usedSwap ?? 0;
+  const swapPercent = totalSwap > 0 ? (usedSwap / totalSwap) * 100 : 0;
 
   // Get last 5 minutes of data (150 data points at 2-second intervals)
   const recentHistory = useMemo(() => {
@@ -119,11 +126,18 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Gauge value={usagePercent} label="Current Usage" unit="%" />
+        <Gauge value={swapPercent} label="Swap Usage" unit="%" />
         <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
           <span className="metric-label">Used / Total</span>
           <span className="metric-value" style={{ fontSize: '16px' }}>
             {formatBytes(used)} / {formatBytes(total)}
           </span>
+          <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span className="metric-label">Swap / Total</span>
+            <span className="metric-value" style={{ fontSize: '16px' }}>
+              {formatBytes(usedSwap)} / {formatBytes(totalSwap)}
+            </span>
+          </div>
         </div>
       </div>
       {recentHistory.length > 0 && (
