@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 neon = "1.0"
 sysinfo = "0.31"
 lazy_static = "1.4"
+battery = "0.7"

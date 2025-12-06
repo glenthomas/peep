@@ -78,6 +78,20 @@ ipcMain.handle('get-system-info', async () => {
   }
 });
 
+ipcMain.handle('get-battery-info', async () => {
+  try {
+    if (!native) {
+      return { available: false };
+    }
+    
+    const batteryInfo = native.getBatteryInfo();
+    return batteryInfo;
+  } catch (error) {
+    console.error('Error getting battery info:', error);
+    return { available: false };
+  }
+});
+
 ipcMain.handle('get-processes', async () => {
   try {
     if (!native) {

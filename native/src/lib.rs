@@ -1,6 +1,7 @@
 use neon::prelude::*;
 use sysinfo::{System, Pid, Signal, ProcessesToUpdate, Networks, Users};
 use std::sync::{Arc, Mutex};
+use battery::Manager;
 
 // Global system instance to maintain state between calls
 lazy_static::lazy_static! {
@@ -179,6 +180,73 @@ fn get_processes(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(processes)
 }
 
+// Get battery information
+fn get_battery_info(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let obj = cx.empty_object();
+    
+    // Try to get battery information
+    match Manager::new() {
+        Ok(manager) => {
+            if let Some(battery) = manager.batteries().ok().and_then(|mut batteries| batteries.next()) {
+                if let Ok(battery) = battery {
+                    // Battery is available
+                    let available = cx.boolean(true);
+                    obj.set(&mut cx, "available", available)?;
+                    
+                    // State of charge (0.0 - 1.0) - multiply by 100 to get percentage
+                    let percentage = cx.number((battery.state_of_charge().value * 100.0) as f64);
+                    obj.set(&mut cx, "percentage", percentage)?;
+                    
+                    // State (charging, discharging, full, etc.)
+                    let state = cx.string(format!("{:?}", battery.state()));
+                    obj.set(&mut cx, "state", state)?;
+                    
+                    // State of health (0.0 - 1.0) - multiply by 100 to get percentage
+                    let health = cx.number((battery.state_of_health().value * 100.0) as f64);
+                    obj.set(&mut cx, "health", health)?;
+                    
+                    // Time to full (if charging) or empty (if discharging)
+                    if let Some(time) = battery.time_to_full() {
+                        let minutes = cx.number(time.get::<battery::units::time::minute>() as f64);
+                        obj.set(&mut cx, "timeToFull", minutes)?;
+                    }
+                    
+                    if let Some(time) = battery.time_to_empty() {
+                        let minutes = cx.number(time.get::<battery::units::time::minute>() as f64);
+                        obj.set(&mut cx, "timeToEmpty", minutes)?;
+                    }
+                    
+                    // Energy (current and full capacity in watt-hours)
+                    let energy = cx.number(battery.energy().get::<battery::units::energy::watt_hour>() as f64);
+                    obj.set(&mut cx, "energy", energy)?;
+                    
+                    let energy_full = cx.number(battery.energy_full().get::<battery::units::energy::watt_hour>() as f64);
+                    obj.set(&mut cx, "energyFull", energy_full)?;
+                    
+                    // Temperature (if available)
+                    if let Some(temp) = battery.temperature() {
+                        let celsius = cx.number(temp.get::<battery::units::thermodynamic_temperature::degree_celsius>() as f64);
+                        obj.set(&mut cx, "temperature", celsius)?;
+                    }
+                    
+                    return Ok(obj);
+                }
+            }
+            
+            // No battery found
+            let available = cx.boolean(false);
+            obj.set(&mut cx, "available", available)?;
+        }
+        Err(_) => {
+            // Battery manager not available
+            let available = cx.boolean(false);
+            obj.set(&mut cx, "available", available)?;
+        }
+    }
+    
+    Ok(obj)
+}
+
 // Kill a process by PID
 fn kill_process(mut cx: FunctionContext) -> JsResult<JsObject> {
     let pid_arg = cx.argument::<JsNumber>(0)?;
@@ -219,6 +287,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getNetworkInfo", get_network_info)?;
     cx.export_function("getSystemInfo", get_system_info)?;
     cx.export_function("getProcesses", get_processes)?;
+    cx.export_function("getBatteryInfo", get_battery_info)?;
     cx.export_function("killProcess", kill_process)?;
     Ok(())
 }

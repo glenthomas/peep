@@ -459,3 +459,104 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.2);
   color: var(--color-text-primary);
 }
+
+/* Battery Monitor Styles */
+.battery-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.battery-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.battery-icon {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.battery-body {
+  width: 80px;
+  height: 40px;
+  border: 3px solid var(--color-text-primary);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.battery-level {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 2px;
+}
+
+.battery-tip {
+  width: 6px;
+  height: 16px;
+  background: var(--color-text-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.battery-percentage {
+  font-size: var(--font-2xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: 'Orbitron', monospace;
+}
+
+.battery-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.battery-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+.battery-stat .label {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.battery-stat .value {
+  font-size: var(--font-md);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-family: 'Orbitron', monospace;
+}
+
+.monitor-card {
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 0;
+}
+
+.monitor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.monitor-card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}

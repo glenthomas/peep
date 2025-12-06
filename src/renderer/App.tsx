@@ -4,12 +4,14 @@ import MemoryMonitor from "./components/MemoryMonitor";
 import DiskMonitor from "./components/DiskMonitor";
 import NetworkMonitor from "./components/NetworkMonitor";
 import ProcessList from "./components/ProcessList";
+import BatteryMonitor from "./components/BatteryMonitor";
 
 declare global {
   interface Window {
     electronAPI: {
       getSystemInfo: () => Promise<any>;
       getProcesses: () => Promise<any[]>;
+      getBatteryInfo: () => Promise<any>;
       killProcess: (
         pid: number
       ) => Promise<{ success: boolean; message: string }>;
@@ -30,6 +32,7 @@ interface HistoricalData {
 const App: React.FC = () => {
   const [systemInfo, setSystemInfo] = useState<any>(null);
   const [processes, setProcesses] = useState<any[]>([]);
+  const [batteryInfo, setBatteryInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoricalData[]>(() =>
@@ -47,13 +50,15 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [info, procs] = await Promise.all([
+        const [info, procs, battery] = await Promise.all([
           window.electronAPI.getSystemInfo(),
           window.electronAPI.getProcesses(),
+          window.electronAPI.getBatteryInfo(),
         ]);
 
         setSystemInfo(info);
         setProcesses(procs);
+        setBatteryInfo(battery);
         setLoading(false);
 
         // Add to history (keep last 30 minutes at 2-second intervals = 900 data points)
@@ -119,6 +124,7 @@ const App: React.FC = () => {
           <MemoryMonitor data={systemInfo?.memory} history={history} />
           <DiskMonitor data={systemInfo?.disk} history={history} />
           <NetworkMonitor data={systemInfo?.network} history={history} />
+          {batteryInfo?.available && <BatteryMonitor batteryInfo={batteryInfo} />}
         </div>
         <ProcessList
           processes={processes}
