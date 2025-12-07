@@ -119,10 +119,23 @@ fn get_disk_info(mut cx: FunctionContext) -> JsResult<JsObject> {
     obj.set(&mut cx, "write", write)?;
     
     // Get disk usage information (reuse the same disks instance)
-    // Filter out redundant system volumes on macOS
+    // Filter out redundant system volumes on macOS and virtual/removable media
     let filtered_disks: Vec<_> = disks.list().iter()
         .filter(|disk| {
             let mount_point = disk.mount_point().to_string_lossy();
+            let file_system = disk.file_system().to_string_lossy();
+            
+            // Skip mounted DMG files (they mount under /Volumes and use HFS+ or APFS)
+            // DMGs are identified by being removable and mounted under /Volumes
+            if mount_point.starts_with("/Volumes/") && disk.is_removable() {
+                return false;
+            }
+            
+            // Skip devfs, autofs, and other virtual filesystems
+            if file_system == "devfs" || file_system == "autofs" || file_system == "nullfs" {
+                return false;
+            }
+            
             // Skip root volume if /System/Volumes/Data exists (macOS APFS)
             // Also skip other internal system volumes
             if mount_point == "/" {
