@@ -101,13 +101,10 @@ npm start
 # Build only the native Rust module
 npm run build:native
 
-# Build only the main process
-npm run build:main
+# Build the TypeScript (main process, preload, and shared modules)
+npm run build:ts
 
-# Build only the preload script
-npm run build:preload
-
-# Build only the renderer process
+# Build only the renderer process (React frontend)
 npm run build:renderer
 
 # Build everything
@@ -122,7 +119,7 @@ npm run dev:renderer
 
 Then in another terminal:
 ```bash
-npm run build:main && npm run build:preload && electron .
+npm run build:ts && electron .
 ```
 
 ## Building for Production

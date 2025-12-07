@@ -25,9 +25,8 @@ Thank you for your interest in contributing to Peep! This document provides guid
 ### Building Components
 
 - **Native Module**: `npm run build:native` - Builds the Rust native module
-- **Main Process**: `npm run build:main` - Compiles the Electron main process
-- **Preload Script**: `npm run build:preload` - Compiles the preload script
-- **Renderer**: `npm run build:renderer` - Builds the React frontend
+- **TypeScript**: `npm run build:ts` - Compiles the Electron main process, preload script, and shared modules
+- **Renderer**: `npm run build:renderer` - Builds the React frontend with webpack
 - **Everything**: `npm run build` - Builds all components
 
 ### Running the Application
@@ -42,7 +41,7 @@ For development with hot reload on the renderer:
 npm run dev:renderer
 
 # Terminal 2
-npm run build:main && npm run build:preload && electron .
+npm run build:ts && electron .
 ```
 
 ## Code Style
