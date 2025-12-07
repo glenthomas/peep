@@ -1,3 +1,4 @@
+import { get } from 'http';
 import React, { memo } from 'react';
 
 interface GaugeProps {
@@ -8,7 +9,11 @@ interface GaugeProps {
   color?: string;
 }
 
+// Generate a unique ID for each gauge instance to avoid filter conflicts
+let gaugeIdCounter = 0;
+
 const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', color }) => {
+  const [filterId] = React.useState(() => `glow-${gaugeIdCounter++}`);
   const percentage = Math.min((value / max) * 100, 100);
   const size = 128; // Reduced from 160 (20% smaller)
   const strokeWidth = 11; // Reduced proportionally
@@ -62,13 +67,48 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
   const yellowPath = createArc(greenEndAngle, yellowEndAngle, radius);
   const redPath = createArc(yellowEndAngle, endAngle, radius);
 
+  const currentColor = color || getColor();
+
   return (
     <div className="gauge-container">
+      <style>
+        {`
+          @keyframes gaugeGlowPulse {
+            0%, 100% {
+              opacity: 0.7;
+            }
+            50% {
+              opacity: 1;
+            }
+          }
+          .gauge-progress-glow {
+            animation: gaugeGlowPulse 2s ease-in-out infinite;
+          }
+        `}
+      </style>
       <svg 
         height={svgHeight} 
         width={size} 
         style={{ overflow: 'visible', display: 'block' }}
       >
+        {/* Glow filter definition */}
+        <defs>
+          <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      0 0 0 1 0"
+            />
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         {/* Background arc */}
         <path
           d={arcPath}
@@ -101,13 +141,15 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           strokeLinecap="butt"
           opacity="0.3"
         />
-        {/* Progress arc */}
+        {/* Progress arc with glow */}
         <path
           d={progressPath}
           fill="none"
-          stroke={color || getColor()}
+          stroke={currentColor}
           strokeWidth={strokeWidth}
           strokeLinecap="butt"
+          filter={`url(#${filterId})`}
+          className="gauge-progress-glow"
           style={{ transition: 'all 0.5s ease' }}
         />
         {/* Pointer */}
@@ -135,7 +177,7 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           y={centerY + 20}
           textAnchor="middle"
           className="gauge-value"
-          style={{ fontSize: '16px', fontWeight: 600, fill: 'var(--color-text-secondary)' }}
+          style={{ fontSize: '16px', fontWeight: 600, fill: percentage < 50 ? 'var(--color-text-secondary)' : getColor() }}
         >
           {value.toFixed(1)}{unit}
         </text>
@@ -144,7 +186,7 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           y={centerY + 34}
           textAnchor="middle"
           className="gauge-label"
-          style={{ fontSize: '10px', fill: 'var(--color-text-primary)' }}
+          style={{ fontSize: '10px', fill: 'var(--color-text-secondary)', opacity: 0.7 }}
         >
           {label}
         </text>
