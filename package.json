@@ -1,6 +1,6 @@
 {
   "name": "peep",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "System monitor - A visually impressive system monitor for macOS",
   "main": "dist/main/main.js",
   "scripts": {
