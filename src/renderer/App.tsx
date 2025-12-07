@@ -4,21 +4,10 @@ import MemoryMonitor from "./components/MemoryMonitor";
 import DiskMonitor from "./components/DiskMonitor";
 import NetworkMonitor from "./components/NetworkMonitor";
 import ProcessList from "./components/ProcessList";
-import BatteryMonitor from "./components/BatteryMonitor";
-
-declare global {
-  interface Window {
-    electronAPI: {
-      getSystemInfo: () => Promise<any>;
-      getProcesses: (showThreads?: boolean) => Promise<any[]>;
-      getBatteryInfo: () => Promise<any>;
-      getOsInfo: () => Promise<any>;
-      killProcess: (
-        pid: number
-      ) => Promise<{ success: boolean; message: string }>;
-    };
-  }
-}
+import type { SystemInfo, ProcessInfo, BatteryInfo, OsInfo } from "../shared/types";
+import { formatUptime } from "../shared/utils";
+import "../shared/types"; // Import for global Window type augmentation
+import "./chartConfig"; // Register Chart.js components once
 
 interface HistoricalData {
   timestamp: number;
@@ -33,10 +22,10 @@ interface HistoricalData {
 }
 
 const App: React.FC = () => {
-  const [systemInfo, setSystemInfo] = useState<any>(null);
-  const [processes, setProcesses] = useState<any[]>([]);
-  const [batteryInfo, setBatteryInfo] = useState<any>(null);
-  const [osInfo, setOsInfo] = useState<any>(null);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [processes, setProcesses] = useState<ProcessInfo[]>([]);
+  const [batteryInfo, setBatteryInfo] = useState<BatteryInfo | null>(null);
+  const [osInfo, setOsInfo] = useState<OsInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showThreads, setShowThreads] = useState(false);
@@ -45,21 +34,6 @@ const App: React.FC = () => {
   const [prevNetworkRx, setPrevNetworkRx] = useState<number>(0);
   const [prevNetworkTx, setPrevNetworkTx] = useState<number>(0);
   const [prevTimestamp, setPrevTimestamp] = useState<number>(Date.now());
-
-  // Format uptime into human-readable string
-  const formatUptime = (seconds: number): string => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    
-    if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m`;
-    } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
-  };
 
   const [history, setHistory] = useState<HistoricalData[]>(() =>
     Array.from({ length: 900 }, (_, i) => ({
@@ -217,9 +191,9 @@ const App: React.FC = () => {
             return `${mins}m`;
           };
           
-          const timeInfo = isCharging && batteryInfo.timeToFull > 0
+          const timeInfo = isCharging && batteryInfo.timeToFull && batteryInfo.timeToFull > 0
             ? formatTime(batteryInfo.timeToFull)
-            : !isCharging && !isFull && batteryInfo.timeToEmpty > 0
+            : !isCharging && !isFull && batteryInfo.timeToEmpty && batteryInfo.timeToEmpty > 0
             ? formatTime(batteryInfo.timeToEmpty)
             : "";
           

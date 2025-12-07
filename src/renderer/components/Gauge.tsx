@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface GaugeProps {
   value: number;
@@ -153,4 +153,4 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
   );
 };
 
-export default Gauge;
+export default memo(Gauge);

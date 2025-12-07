@@ -1,52 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
 import Gauge from './Gauge';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { formatStorage } from '../../shared/utils';
+import type { MemoryInfo } from '../../shared/types';
 
 interface MemoryMonitorProps {
-  data?: {
-    total: number;
-    used: number;
-    free: number;
-    totalSwap: number;
-    usedSwap: number;
-    freeSwap: number;
-  };
+  data?: MemoryInfo;
   history?: Array<{
     timestamp: number;
     memory: number;
     swap: number;
   }>;
 }
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-};
 
 const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => {
   const total = data?.total ?? 0;
@@ -143,12 +108,12 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
         <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
           <span className="metric-label">Used / Total</span>
           <span className="metric-value" style={{ fontSize: '16px' }}>
-            {formatBytes(used)} / {formatBytes(total)}
+            {formatStorage(used)} / {formatStorage(total)}
           </span>
           <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
             <span className="metric-label">Swap / Total</span>
             <span className="metric-value" style={{ fontSize: '16px' }}>
-              {formatBytes(usedSwap)} / {formatBytes(totalSwap)}
+              {formatStorage(usedSwap)} / {formatStorage(totalSwap)}
             </span>
           </div>
         </div>
@@ -162,4 +127,4 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
   );
 };
 
-export default MemoryMonitor;
+export default memo(MemoryMonitor);

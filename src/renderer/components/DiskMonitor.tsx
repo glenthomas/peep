@@ -1,63 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { formatThroughput, formatStorage } from '../../shared/utils';
+import type { DiskInfo } from '../../shared/types';
 
 interface DiskMonitorProps {
-  data?: {
-    read: number;
-    write: number;
-    disks?: Array<{
-      name: string;
-      mountPoint: string;
-      totalSpace: number;
-      usedSpace: number;
-      availableSpace: number;
-      fileSystem: string;
-    }>;
-  };
+  data?: DiskInfo;
   history?: Array<{
     timestamp: number;
     diskRead: number;
     diskWrite: number;
   }>;
 }
-
-const formatBytes = (bytes: number): string => {
-  if (bytes < 1) return `${bytes} B/s`;
-  const k = 1024;
-  const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-};
-
-const formatStorage = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-};
 
 const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
   const read = data?.read ?? 0;
@@ -114,7 +67,7 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
         intersect: false,
         callbacks: {
           label: (context: any) => {
-            return `${context.dataset.label}: ${formatBytes(context.parsed.y)}`;
+            return `${context.dataset.label}: ${formatThroughput(context.parsed.y)}`;
           },
         },
       },
@@ -135,7 +88,7 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
         min: 0,
         ticks: {
           color: 'white',
-          callback: (value: any) => formatBytes(value),
+          callback: (value: any) => formatThroughput(value),
         },
       },
     },
@@ -157,15 +110,15 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
         <div>
           <div className="metric">
             <span className="metric-label">Read Speed</span>
-            <span className="metric-value">{formatBytes(read)}</span>
+            <span className="metric-value">{formatThroughput(read)}</span>
           </div>
           <div className="metric">
             <span className="metric-label">Write Speed</span>
-            <span className="metric-value">{formatBytes(write)}</span>
+            <span className="metric-value">{formatThroughput(write)}</span>
           </div>
           <div className="metric">
             <span className="metric-label">Total Throughput</span>
-            <span className="metric-value">{formatBytes(read + write)}</span>
+            <span className="metric-value">{formatThroughput(read + write)}</span>
           </div>
         </div>
         
@@ -222,4 +175,4 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
   );
 };
 
-export default DiskMonitor;
+export default memo(DiskMonitor);

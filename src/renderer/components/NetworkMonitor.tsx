@@ -1,27 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import '../chartConfig';
+import { formatBytes, formatStorage } from '../../shared/utils';
 
 interface NetworkInterface {
   name: string;
@@ -44,22 +24,6 @@ interface NetworkMonitorProps {
     networkTx: number;
   }>;
 }
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B/s';
-  const k = 1024;
-  const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-};
-
-const formatStorage = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-};
 
 const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) => {
   const rx = data?.rx ?? 0;
@@ -141,7 +105,7 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
         intersect: false,
         callbacks: {
           label: (context: any) => {
-            return `${context.dataset.label}: ${formatBytes(context.parsed.y)}`;
+            return `${context.dataset.label}: ${formatBytes(context.parsed.y, { perSecond: true })}`;
           },
         },
       },
@@ -162,7 +126,7 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
         min: 0,
         ticks: {
           color: 'white',
-          callback: (value: any) => formatBytes(value),
+          callback: (value: any) => formatBytes(Number(value), { perSecond: true }),
         },
       },
     },
@@ -182,15 +146,15 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
         <div>
           <div className="metric">
             <span className="metric-label">Download (RX)</span>
-            <span className="metric-value">{formatBytes(rx)}</span>
+            <span className="metric-value">{formatBytes(rx, { perSecond: true })}</span>
           </div>
           <div className="metric">
             <span className="metric-label">Upload (TX)</span>
-            <span className="metric-value">{formatBytes(tx)}</span>
+            <span className="metric-value">{formatBytes(tx, { perSecond: true })}</span>
           </div>
           <div className="metric">
             <span className="metric-label">Total Bandwidth</span>
-            <span className="metric-value">{formatBytes(rx + tx)}</span>
+            <span className="metric-value">{formatBytes(rx + tx, { perSecond: true })}</span>
           </div>
         </div>
         
@@ -226,4 +190,4 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
   );
 };
 
-export default NetworkMonitor;
+export default memo(NetworkMonitor);

@@ -1,28 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
+import '../chartConfig';
 import Gauge from './Gauge';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 interface CPUMonitorProps {
   data?: {
@@ -216,4 +195,4 @@ const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
   );
 };
 
-export default CPUMonitor;
+export default memo(CPUMonitor);

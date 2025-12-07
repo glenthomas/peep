@@ -1,7 +1,8 @@
-import React from "react";
+import React, { memo } from "react";
+import { BatteryInfo } from '../../shared/types';
 
 interface BatteryMonitorProps {
-  batteryInfo: any;
+  batteryInfo: BatteryInfo;
 }
 
 const BatteryMonitor: React.FC<BatteryMonitorProps> = ({ batteryInfo }) => {
@@ -141,4 +142,4 @@ const BatteryMonitor: React.FC<BatteryMonitorProps> = ({ batteryInfo }) => {
   );
 };
 
-export default BatteryMonitor;
+export default memo(BatteryMonitor);

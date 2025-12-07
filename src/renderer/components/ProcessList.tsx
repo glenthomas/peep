@@ -1,58 +1,15 @@
-import React, { useState } from "react";
-
-interface Process {
-  pid: number;
-  ppid: number;
-  name: string;
-  cpu: number;
-  memoryBytes: number;
-  memoryPercentage: number;
-  user: string;
-  runTime: number;
-  cpuTime: number;
-  status: string;
-  command: string;
-  diskRead: number;
-  diskWrite: number;
-  isThread: boolean;
-}
+import React, { memo, useState } from "react";
+import { formatBytes, formatRunTime, formatCpuTime } from '../../shared/utils';
+import { ProcessInfo } from '../../shared/types';
 
 interface ProcessListProps {
-  processes: Process[];
+  processes: ProcessInfo[];
   showThreads: boolean;
   onToggleThreads: () => void;
   onKillProcess: (
     pid: number
   ) => Promise<{ success: boolean; message: string }>;
 }
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
-};
-
-const formatRunTime = (seconds: number): string => {
-  if (seconds < 60) return `${Math.floor(seconds)}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours < 24) return `${hours}h ${mins}m`;
-  const days = Math.floor(hours / 24);
-  const hrs = hours % 24;
-  return `${days}d ${hrs}h`;
-};
-
-const formatCpuTime = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  const ms = Math.floor((seconds % 1) * 1000);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
-};
 
 const ProcessList: React.FC<ProcessListProps> = ({
   processes,
@@ -143,9 +100,9 @@ const ProcessList: React.FC<ProcessListProps> = ({
   };
 
   // Build process tree structure
-  const buildProcessTree = (processes: Process[]) => {
-    const processMap = new Map<number, Process>();
-    const childrenMap = new Map<number, Process[]>();
+  const buildProcessTree = (processes: ProcessInfo[]) => {
+    const processMap = new Map<number, ProcessInfo>();
+    const childrenMap = new Map<number, ProcessInfo[]>();
     
     // First pass: create maps
     processes.forEach(proc => {
@@ -170,7 +127,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
     return { processMap, childrenMap, roots };
   };
 
-  const renderProcessTree = (process: Process, level: number, childrenMap: Map<number, Process[]>) => {
+  const renderProcessTree = (process: ProcessInfo, level: number, childrenMap: Map<number, ProcessInfo[]>) => {
     const children = childrenMap.get(process.pid) || [];
     const hasChildren = children.length > 0;
     const isExpanded = expandedPids.has(process.pid);
@@ -660,4 +617,4 @@ const ProcessList: React.FC<ProcessListProps> = ({
   );
 };
 
-export default ProcessList;
+export default memo(ProcessList);
