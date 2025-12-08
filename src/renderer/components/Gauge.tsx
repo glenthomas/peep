@@ -15,12 +15,12 @@ let gaugeIdCounter = 0;
 const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', color }) => {
   const [filterId] = React.useState(() => `glow-${gaugeIdCounter++}`);
   const percentage = Math.min((value / max) * 100, 100);
-  const size = 128; // Reduced from 160 (20% smaller)
-  const strokeWidth = 11; // Reduced proportionally
+  const size = 83;
+  const strokeWidth = 7;
   const radius = (size - strokeWidth) / 2;
   const centerX = size / 2;
-  const centerY = strokeWidth / 2 + radius; // Position arc at top of reduced SVG
-  const svgHeight = radius + strokeWidth + 22; // Just enough for arc + text below
+  const centerY = strokeWidth / 2 + radius;
+  const svgHeight = radius + strokeWidth + 36;
   
   // Create semi-circle arc (180 degrees) - bottom half
   const startAngle = -90;
@@ -68,9 +68,19 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
   const redPath = createArc(yellowEndAngle, endAngle, radius);
 
   const currentColor = color || getColor();
+  
+  // Border parameters
+  const borderRadius = radius + strokeWidth / 2 + 6; // Slightly larger than the gauge
+  const borderStrokeWidth = 2;
 
   return (
-    <div className="gauge-container">
+    <div className="gauge-container" style={{ 
+      background: 'white', 
+      borderRadius: '100px 100px 40px 40px',
+      padding: '8px 12px 4px 12px',
+      display: 'inline-block',
+      border: '3px solid #7d8899',
+    }}>
       <style>
         {`
           @keyframes gaugeGlowPulse {
@@ -109,6 +119,15 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
             </feMerge>
           </filter>
         </defs>
+        {/* White border semi-circle */}
+        <path
+          d={createArc(startAngle, endAngle, borderRadius)}
+          fill="none"
+          stroke="rgba(180, 180, 180, 0.6)"
+          strokeWidth={borderStrokeWidth}
+          strokeLinecap="butt"
+          style={{ zIndex: -1 }}
+        />
         {/* Background arc */}
         <path
           d={arcPath}
@@ -177,7 +196,7 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           y={centerY + 20}
           textAnchor="middle"
           className="gauge-value"
-          style={{ fontSize: '16px', fontWeight: 600, fill: percentage < 50 ? 'var(--color-text-secondary)' : getColor() }}
+          style={{ fontSize: '16px', fontWeight: 600, fill: getColor() }}
         >
           {value.toFixed(1)}{unit}
         </text>
@@ -186,7 +205,7 @@ const Gauge: React.FC<GaugeProps> = ({ value, max = 100, label, unit = '%', colo
           y={centerY + 34}
           textAnchor="middle"
           className="gauge-label"
-          style={{ fontSize: '10px', fill: 'var(--color-text-secondary)', opacity: 0.7 }}
+          style={{ fontSize: '10px', fill: 'black', opacity: 0.7 }}
         >
           {label}
         </text>

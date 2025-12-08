@@ -103,8 +103,10 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
         <h2>Memory Usage</h2>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Gauge value={usagePercent} label="Current Usage" unit="%" />
-        <Gauge value={swapPercent} label="Swap Usage" unit="%" />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Gauge value={usagePercent} label="Current Usage" unit="%" />
+          <Gauge value={swapPercent} label="Swap Usage" unit="%" />
+        </div>
         <div className="metric" style={{ border: 'none', flexDirection: 'column', alignItems: 'flex-end' }}>
           <span className="metric-label">Used / Total</span>
           <span className="metric-value" style={{ fontSize: '16px' }}>
