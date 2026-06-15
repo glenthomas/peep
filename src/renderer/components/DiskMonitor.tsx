@@ -127,36 +127,53 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
             <h3 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--color-text-primary)', marginTop: 0 }}>Disk Usage</h3>
             {disks.map((disk, index) => {
               const usagePercent = disk.totalSpace > 0 ? (disk.usedSpace / disk.totalSpace) * 100 : 0;
+              const barColor = usagePercent > 90 ? 'var(--color-error)' : usagePercent > 70 ? 'var(--color-warning)' : 'var(--color-success)';
               return (
-                <div key={index} style={{ marginBottom: '15px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                      {disk.mountPoint}
+                <div key={index} style={{ marginBottom: '16px' }}>
+                  {/* Disk name + filesystem badge */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-secondary)' }}>
+                      {disk.name || disk.mountPoint}
                     </span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-primary)' }}>
-                      {usagePercent.toFixed(1)}%
+                    <span style={{
+                      fontSize: '10px',
+                      color: 'var(--color-text-primary)',
+                      opacity: 0.7,
+                      background: 'rgba(255,255,255,0.08)',
+                      borderRadius: '3px',
+                      padding: '1px 5px',
+                      letterSpacing: '0.03em',
+                    }}>
+                      {disk.fileSystem}
                     </span>
                   </div>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '6px', 
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+                  {/* Mount point */}
+                  <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', opacity: 0.55, marginBottom: '6px' }}>
+                    {disk.mountPoint}
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{
+                    width: '100%',
+                    height: '6px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     borderRadius: '3px',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
                   }}>
-                    <div style={{ 
-                      width: `${usagePercent}%`, 
-                      height: '100%', 
-                      backgroundColor: usagePercent > 90 ? 'var(--color-error)' : usagePercent > 70 ? 'var(--color-warning)' : 'var(--color-success)',
-                      transition: 'width 0.3s ease'
+                    <div style={{
+                      width: `${usagePercent}%`,
+                      height: '100%',
+                      backgroundColor: barColor,
+                      transition: 'width 0.3s ease',
                     }} />
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.7 }}>
-                      {formatStorage(disk.usedSpace)} used
+                  {/* Space breakdown: used · free · total */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.75 }}>
+                      <span style={{ color: barColor, fontWeight: '500' }}>{usagePercent.toFixed(1)}%</span>
+                      {' '}used · {formatStorage(disk.usedSpace)}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.7 }}>
-                      {formatStorage(disk.totalSpace)} total
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.75 }}>
+                      {formatStorage(disk.availableSpace)} free / {formatStorage(disk.totalSpace)}
                     </span>
                   </div>
                 </div>
