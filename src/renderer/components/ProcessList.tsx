@@ -1,6 +1,19 @@
-import React, { memo, useState } from "react";
+import React, { memo, useState, useEffect, useRef } from "react";
 import { formatBytes, formatRunTime, formatCpuTime } from '../../shared/utils';
 import { ProcessInfo } from '../../shared/types';
+
+const contextMenuItemStyle: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  padding: '7px 14px',
+  fontSize: '13px',
+  textAlign: 'left',
+  background: 'transparent',
+  border: 'none',
+  color: 'var(--color-text-secondary)',
+  cursor: 'pointer',
+  transition: 'background 0.15s',
+};
 
 interface ProcessListProps {
   processes: ProcessInfo[];
@@ -31,6 +44,35 @@ const ProcessList: React.FC<ProcessListProps> = ({
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [showTreeView, setShowTreeView] = useState(false);
   const [expandedPids, setExpandedPids] = useState<Set<number>>(new Set());
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    process: ProcessInfo;
+  } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [contextMenu]);
+
+  const handleContextMenu = (e: React.MouseEvent, process: ProcessInfo) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Flip left if near right edge, flip up if near bottom edge
+    const menuWidth = 180;
+    const menuHeight = 110;
+    const x = e.clientX + menuWidth > window.innerWidth ? e.clientX - menuWidth : e.clientX;
+    const y = e.clientY + menuHeight > window.innerHeight ? e.clientY - menuHeight : e.clientY;
+    setContextMenu({ x, y, process });
+  };
   
   // Column visibility state - command hidden by default
   const [visibleColumns, setVisibleColumns] = useState({
@@ -138,6 +180,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
       <tr
         key={process.pid}
         onClick={() => setSelectedPid(process.pid)}
+        onContextMenu={(e) => handleContextMenu(e, process)}
         style={{
           backgroundColor:
             selectedPid === process.pid
@@ -559,6 +602,7 @@ const ProcessList: React.FC<ProcessListProps> = ({
             <tr
               key={process.pid}
               onClick={() => setSelectedPid(process.pid)}
+              onContextMenu={(e) => handleContextMenu(e, process)}
               style={{
                 backgroundColor:
                   selectedPid === process.pid
@@ -591,6 +635,81 @@ const ProcessList: React.FC<ProcessListProps> = ({
         <p style={{ textAlign: "center", padding: "20px", color: "#999" }}>
           No processes found
         </p>
+      )}
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            background: 'var(--color-bg-secondary)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '6px',
+            padding: '4px 0',
+            zIndex: 2000,
+            minWidth: '180px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          {/* Process name header */}
+          <div style={{
+            padding: '6px 14px 8px',
+            fontSize: '11px',
+            color: 'var(--color-text-primary)',
+            fontWeight: '600',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            marginBottom: '4px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: '180px',
+          }}>
+            {contextMenu.process.name}
+          </div>
+
+          {/* Copy Name */}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(contextMenu.process.name);
+              setContextMenu(null);
+            }}
+            style={contextMenuItemStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            Copy Name
+          </button>
+
+          {/* Copy PID */}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(String(contextMenu.process.pid));
+              setContextMenu(null);
+            }}
+            style={contextMenuItemStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            Copy PID ({contextMenu.process.pid})
+          </button>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '4px 0' }} />
+
+          {/* Kill Process */}
+          <button
+            onClick={() => {
+              handleKillProcess(contextMenu.process.pid, contextMenu.process.name);
+              setContextMenu(null);
+            }}
+            style={{ ...contextMenuItemStyle, color: '#f87171' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.12)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            Kill Process
+          </button>
+        </div>
       )}
 
       {showConfirmDialog && processToKill && (
