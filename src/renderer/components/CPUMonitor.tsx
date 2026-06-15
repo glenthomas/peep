@@ -15,18 +15,19 @@ interface CPUMonitorProps {
     cpu: number;
     perCore?: number[];
   }>;
+  timeWindow?: 5 | 15 | 30;
 }
 
-const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [] }) => {
+const CPUMonitor: React.FC<CPUMonitorProps> = ({ data, history = [], timeWindow = 5 }) => {
   const [showPerCore, setShowPerCore] = React.useState(true);
   const usage = data?.usage ?? 0;
   const cores = data?.cores ?? 0;
   const perCore = data?.perCore ?? [];
 
-  // Get last 5 minutes of data (150 data points at 2-second intervals)
+  // Slice history to the selected time window (30 data points per minute at 2s intervals)
   const recentHistory = useMemo(() => {
-    return history.slice(-150);
-  }, [history]);
+    return history.slice(-(timeWindow * 30));
+  }, [history, timeWindow]);
 
   const chartData = useMemo(() => {
     if (showPerCore && perCore.length > 0) {

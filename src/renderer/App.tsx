@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showThreads, setShowThreads] = useState(false);
+  const [timeWindow, setTimeWindow] = useState<5 | 15 | 30>(5);
   
   // Track previous values for network rate calculation
   const [prevNetworkRx, setPrevNetworkRx] = useState<number>(0);
@@ -282,11 +283,34 @@ const App: React.FC = () => {
 
       </header>
       <main className="main-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+            {([5, 15, 30] as const).map((w, i) => (
+              <button
+                key={w}
+                onClick={() => setTimeWindow(w)}
+                style={{
+                  padding: '5px 14px',
+                  fontSize: '12px',
+                  background: timeWindow === w ? 'rgba(102, 126, 234, 0.5)' : 'rgba(255, 255, 255, 0.07)',
+                  border: 'none',
+                  borderRight: i < 2 ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: timeWindow === w ? '600' : 'normal',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {w}m
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="dashboard">
-          <CPUMonitor data={systemInfo?.cpu} history={history} />
-          <MemoryMonitor data={systemInfo?.memory} history={history} />
-          <DiskMonitor data={systemInfo?.disk} history={history} />
-          <NetworkMonitor data={systemInfo?.network} history={history} />
+          <CPUMonitor data={systemInfo?.cpu} history={history} timeWindow={timeWindow} />
+          <MemoryMonitor data={systemInfo?.memory} history={history} timeWindow={timeWindow} />
+          <DiskMonitor data={systemInfo?.disk} history={history} timeWindow={timeWindow} />
+          <NetworkMonitor data={systemInfo?.network} history={history} timeWindow={timeWindow} />
           {/* {batteryInfo?.available && <BatteryMonitor batteryInfo={batteryInfo} />} */}
         </div>
         <ProcessList

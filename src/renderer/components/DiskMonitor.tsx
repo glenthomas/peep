@@ -10,17 +10,18 @@ interface DiskMonitorProps {
     diskRead: number;
     diskWrite: number;
   }>;
+  timeWindow?: 5 | 15 | 30;
 }
 
-const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
+const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [], timeWindow = 5 }) => {
   const read = data?.read ?? 0;
   const write = data?.write ?? 0;
   const disks = data?.disks ?? [];
 
-  // Get last 5 minutes of data (150 data points at 2-second intervals)
+  // Slice history to the selected time window (30 data points per minute at 2s intervals)
   const recentHistory = useMemo(() => {
-    return history.slice(-150);
-  }, [history]);
+    return history.slice(-(timeWindow * 30));
+  }, [history, timeWindow]);
 
   const chartData = useMemo(() => {
     return {
