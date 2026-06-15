@@ -56,7 +56,7 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
     };
   }, [recentHistory]);
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -92,7 +92,7 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
         },
       },
     },
-  };
+  }), []);
 
   return (
     <div className="card">

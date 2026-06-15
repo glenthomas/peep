@@ -51,7 +51,7 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
     };
   }, [recentHistory]);
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -92,7 +92,7 @@ const DiskMonitor: React.FC<DiskMonitorProps> = ({ data, history = [] }) => {
         },
       },
     },
-  };
+  }), []);
 
   return (
     <div className="card">

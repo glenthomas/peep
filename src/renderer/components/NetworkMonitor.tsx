@@ -89,7 +89,7 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
     };
   }, [recentHistory]);
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -130,7 +130,7 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
         },
       },
     },
-  };
+  }), []);
 
   return (
     <div className="card">
