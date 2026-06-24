@@ -11,9 +11,10 @@ interface MemoryMonitorProps {
     memory: number;
     swap: number;
   }>;
+  timeWindow?: 5 | 15 | 30;
 }
 
-const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => {
+const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [], timeWindow = 5 }) => {
   const total = data?.total ?? 0;
   const used = data?.used ?? 0;
   const usagePercent = total > 0 ? (used / total) * 100 : 0;
@@ -22,10 +23,10 @@ const MemoryMonitor: React.FC<MemoryMonitorProps> = ({ data, history = [] }) => 
   const usedSwap = data?.usedSwap ?? 0;
   const swapPercent = totalSwap > 0 ? (usedSwap / totalSwap) * 100 : 0;
 
-  // Get last 5 minutes of data (150 data points at 2-second intervals)
+  // Slice history to the selected time window (30 data points per minute at 2s intervals)
   const recentHistory = useMemo(() => {
-    return history.slice(-150);
-  }, [history]);
+    return history.slice(-(timeWindow * 30));
+  }, [history, timeWindow]);
 
   const chartData = useMemo(() => {
     return {

@@ -23,9 +23,10 @@ interface NetworkMonitorProps {
     networkRx: number;
     networkTx: number;
   }>;
+  timeWindow?: 5 | 15 | 30;
 }
 
-const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) => {
+const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [], timeWindow = 5 }) => {
   const rx = data?.rx ?? 0;
   const tx = data?.tx ?? 0;
   const incomingInterfaces = data?.interfaces ?? [];
@@ -55,10 +56,10 @@ const NetworkMonitor: React.FC<NetworkMonitorProps> = ({ data, history = [] }) =
   // Convert map to array for rendering
   const interfaces = Array.from(persistedInterfaces.values());
 
-  // Get last 5 minutes of data (150 data points at 2-second intervals)
+  // Slice history to the selected time window (30 data points per minute at 2s intervals)
   const recentHistory = useMemo(() => {
-    return history.slice(-150);
-  }, [history]);
+    return history.slice(-(timeWindow * 30));
+  }, [history, timeWindow]);
 
   const chartData = useMemo(() => {
     return {
